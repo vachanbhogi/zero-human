@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ScannedProfile } from "@/lib/types";
+import { discoverWithGroq } from "@/lib/groq-discovery";
 
 const BLOCKED_HOSTNAMES = new Set([
   "localhost",
@@ -104,16 +105,34 @@ export async function POST(req: NextRequest) {
 
     const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
     const title = titleMatch ? decodeEntities(titleMatch[1]) : undefined;
+    const metaDesc =
+      metaContent(html, "name", "description") ??
+      metaContent(html, "property", "og:description");
 
-    const profile: ScannedProfile = {
+    const cleanText = html
+      .replace(/<script\b[^<]*>[\s\S]*?<\/script>/gi, "")
+      .replace(/<style\b[^<]*>[\s\S]*?<\/style>/gi, "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 3000);
+
+    const excerpt = `Page Title: ${title || "N/A"}
+Meta Description: ${metaDesc || "N/A"}
+Content Excerpt: ${cleanText}`;
+
+    // Attempt high-speed Groq AI extraction if key is present
+    const groqProfile = await discoverWithGroq(url.toString(), excerpt);
+
+    const fallbackProfile: ScannedProfile = {
       name:
         metaContent(html, "property", "og:site_name") ??
         (title ? cleanTitle(title) : undefined),
-      summary:
-        metaContent(html, "name", "description") ??
-        metaContent(html, "property", "og:description"),
+      summary: metaDesc,
       niche: metaContent(html, "name", "keywords")?.split(",")[0]?.trim(),
     };
+
+    const profile: ScannedProfile = groqProfile || fallbackProfile;
 
     return NextResponse.json({
       success: true,
