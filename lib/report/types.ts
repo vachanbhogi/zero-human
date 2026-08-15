@@ -3,21 +3,22 @@
 export type ClaimKind = "inference" | "recommendation";
 
 export interface SourceRef {
-  id: string;
   url: string;
   retrievedAt: string;
 }
 
 export interface EvidencedText {
   text: string;
-  sourceIds?: readonly string[];
+  sources?: readonly SourceRef[];
   kind?: ClaimKind;
 }
 
 export interface CompetitorResult {
   name: string;
-  positioning: EvidencedText;
-  weakness: EvidencedText;
+  positioning: string;
+  weakness: string;
+  sources: readonly SourceRef[];
+  inference?: boolean;
 }
 
 export interface PersonaResult {
@@ -33,7 +34,7 @@ export interface OutreachResult {
 }
 
 export type TeracResult =
-  | { status: "not_run" | "pending" }
+  | { status: "not_run" }
   | {
       status: "completed";
       studyId: string;
