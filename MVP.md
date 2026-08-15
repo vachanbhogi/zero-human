@@ -1,7 +1,7 @@
 # Tack — Zero Human hackathon MVP
 
 > **Company:** Tack (agent-run growth desk)  
-> **Offer:** Tack Sprint — $15  
+> **Offer:** Tack Desk — $200/mo list, $20/mo founding (90% off on the call)  
 > **Input:** website URL  
 > **Output:** competitor teardown + personas + 10 outreach angles + one next move, in ~3 minutes  
 > **Hackathon track:** Zero Human (`PROJECT.md`)
@@ -15,16 +15,16 @@
 | Field | Value |
 |---|---|
 | Company | **Tack** |
-| Offer | **Tack Sprint — $15** |
-| Customer | Hackathon founders / early-stage startups in the building |
-| Problem | Need a campaign they can send today, not a marketing SaaS |
+| Offer | **Tack Desk — $200/mo.** Founding close **$20/mo (90% off)** if they pay on the call. |
+| Customer | Local businesses and founders you can reach by phone today |
+| Problem | Need a campaign they can send this week, not a marketing SaaS |
 | Input | Website URL (optional niche / audience) |
-| Deliverable | 5-pillar competitor teardown, persona matrix, 10 outreach angles, one next-move recommendation |
-| Success measure | Terac preference rate (before vs after copy) |
-| Pitch | Give us your URL. Tack researches competitors, writes outreach, rates it with real people, and delivers the sprint in about 3 minutes. $15 today. Want us to run it on yours? |
-| Not this | Dopa, Zero Human as a product name, brain/cortical models, subscriptions |
+| Deliverable | Competitor teardown, persona matrix, 10 outreach angles, one next-move recommendation |
+| Success measure | Real Stripe charge + Terac preference rate (before vs after copy) |
+| Pitch | Tack is a $200/month agent-run growth desk. On this call it's $20/mo — 90% off — if you pay before we hang up. Paste your URL. Agents deliver in about 3 minutes. |
+| Not this | Dopa, Zero Human as a product name, brain/cortical models, $15 one-shot sprints |
 
-Mark: course-change stroke (a tack) + indigo origin. Visual world: Linear-dark craft copied from the prior landing, new copy and product.
+Mark: course-change stroke (a tack) + indigo origin. Visual world: Linear-dark. Talk track: `/call`.
 
 ---
 

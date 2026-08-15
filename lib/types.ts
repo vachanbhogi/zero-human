@@ -1,24 +1,9 @@
-export const DELIVERABLE_FOCUS = [
-  "Competitor teardown",
-  "Positioning rewrite",
-  "Prospect list",
-  "Outreach copy",
-] as const;
-
-export const MARKET_STAGE = [
-  "Pre-launch",
-  "Early traction",
-  "Scaling",
-] as const;
-
 export interface AgentBrief {
   url: string;
   company: string;
   niche: string;
   audience: string;
   competitors: string;
-  focus: string;
-  stage: string;
   email: string;
 }
 
@@ -28,8 +13,6 @@ export const emptyAgentBrief = (): AgentBrief => ({
   niche: "",
   audience: "",
   competitors: "",
-  focus: "",
-  stage: "",
   email: "",
 });
 
@@ -56,6 +39,9 @@ export interface OrderResponse {
   competitors?: string[];
   focus?: string;
   stage?: string;
+  businessId?: string;
+  productId?: string;
+  ownerId?: string;
 }
 
 export interface ScannedProfile {

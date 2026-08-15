@@ -19,7 +19,7 @@ const mono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: `${BRAND} – Autonomous growth desk`,
   description:
-    "Give us a URL. Tack researches competitors, writes outreach, rates it with real people, and delivers a $15 growth sprint.",
+    "Give us a URL. Tack runs a $200/mo growth desk at a $20/mo founding rate — competitors, outreach, humans on Terac.",
   icons: {
     icon: "/icon.svg",
   },
