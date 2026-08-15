@@ -20,7 +20,7 @@ const copy = {
 
 export function AuthModal({
   mode,
-  redirectTo = "/onboarding",
+  redirectTo = "/dashboard",
   error,
   message,
 }: AuthModalProps) {

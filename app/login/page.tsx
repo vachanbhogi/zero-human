@@ -1,6 +1,9 @@
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { login } from "@/app/auth/actions";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { AuthShell } from "@/components/auth/AuthShell";
+import { createClient } from "@/utils/supabase/server";
 
 export default async function LoginPage({
   searchParams,
@@ -8,13 +11,20 @@ export default async function LoginPage({
   searchParams: Promise<{ error?: string; message?: string; redirectTo?: string }>;
 }) {
   const params = await searchParams;
+  const supabase = createClient(await cookies());
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user) {
+    redirect("/dashboard");
+  }
 
   return (
     <AuthShell title="Welcome back">
       <AuthForm
         mode="login"
         action={login}
-        redirectTo={params.redirectTo ?? "/onboarding"}
+        redirectTo={params.redirectTo ?? "/dashboard"}
         error={params.error}
         message={params.message}
       />

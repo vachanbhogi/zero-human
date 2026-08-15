@@ -1,4 +1,5 @@
 import { ArrowRight } from "../icons";
+import { LIST_LABEL, OFFER_NAME, PRICE_LABEL } from "@/lib/brand";
 
 const pillars = [
   {
@@ -16,7 +17,7 @@ const pillars = [
   {
     id: "delivery",
     title: "A campaign you can send",
-    body: "Publisher packages the teardown, personas, and 10 outreach lines into one report. Pay $15, walk away with it.",
+    body: `Publisher packages the teardown, personas, and 10 outreach lines into one report. Founding rate ${PRICE_LABEL} — 90% off ${LIST_LABEL}.`,
     fig: "FIG 3",
   },
 ] as const;
@@ -96,8 +97,8 @@ export function Pipeline() {
       <div className="mx-auto max-w-300 px-5 py-24 md:px-8 md:py-32">
         <h2 className="mx-auto max-w-205 text-center text-[28px] font-medium leading-[1.2] tracking-[-0.03em] text-foreground md:text-[40px]">
           An agent-run company, not a marketing SaaS. Tack takes a URL, does the
-          research, asks humans when copy is ambiguous, and delivers a sprint you
-          can act on in minutes.
+          research, asks humans when copy is ambiguous, and delivers a campaign you
+          can send this week.
         </h2>
 
         <div className="mt-16 grid gap-10 md:mt-24 md:grid-cols-3 md:gap-8">
@@ -156,7 +157,7 @@ export function Scan() {
           </h2>
           <p className="mt-4 text-[16px] leading-7 text-secondary">
             Paste a website. Scout extracts name, offer, and audience so the
-            sprint starts from the live product — not a blank brief.
+            desk starts from the live product — not a blank brief.
           </p>
         </div>
 
@@ -330,7 +331,7 @@ export function Report() {
         <div className="max-w-160">
           <SectionLink index="4.0" label="Deliverable" />
           <h2 className="mt-5 text-[32px] font-medium leading-[1.15] tracking-[-0.03em] md:text-[40px]">
-            What $15 buys: a sprint you can send tonight.
+            What {PRICE_LABEL} buys: a desk you can send from tonight.
           </h2>
           <p className="mt-4 text-[16px] leading-7 text-secondary">
             Not a dashboard login. A concrete package: teardown, personas,
@@ -340,7 +341,7 @@ export function Report() {
 
         <div className="zh-panel mt-12 overflow-hidden">
           <div className="border-b border-white/6 px-5 py-3 text-[12px] text-tertiary">
-            Tack Sprint · sample table of contents
+            {OFFER_NAME} · sample table of contents
           </div>
           <ol className="divide-y divide-white/6">
             {[
