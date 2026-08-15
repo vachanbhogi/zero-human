@@ -43,6 +43,12 @@ set -e
 grep -q 'WARNING: open PR snapshot failed' <<<"$gh_failure_output"
 grep -q '^oldsha$' "$tmp/state"
 
+gh_movement_output="$(PATH="$tmp/bin:$PATH" TMPDIR="$tmp" WATCH_STATE_FILE="$tmp/state" WATCH_FAIL_GH=1 WATCH_MAIN_SHA=newsha WATCH_MAX_CYCLES=1 "$root/scripts/repo-watcher.sh" "$tmp/repo" 2>&1)"
+grep -q 'WARNING: open PR snapshot failed' <<<"$gh_movement_output"
+grep -q 'ALERT origin/main moved: oldsha -> newsha' <<<"$gh_movement_output"
+grep -q '^newsha$' "$tmp/state"
+
+printf 'oldsha\n#1 old\n' > "$tmp/state"
 movement_output="$(PATH="$tmp/bin:$PATH" TMPDIR="$tmp" WATCH_STATE_FILE="$tmp/state" WATCH_MAIN_SHA=newsha WATCH_MAX_CYCLES=1 "$root/scripts/repo-watcher.sh" "$tmp/repo" 2>&1)"
 grep -q 'ALERT origin/main moved: oldsha -> newsha' <<<"$movement_output"
 grep -q $'M\tREADME.md' <<<"$movement_output"

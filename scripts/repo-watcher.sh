@@ -37,17 +37,18 @@ while :; do
     sleep "$interval"
     continue
   fi
+  prs_available=1
   if ! current_prs="$(snapshot_prs)"; then
     warn "open PR snapshot failed; preserving last good state and retrying"
-    sleep "$interval"
-    continue
+    current_prs="$previous_prs"
+    prs_available=0
   fi
 
   if [[ -n "$previous_main" && "$current_main" != "$previous_main" ]]; then
     printf 'ALERT origin/main moved: %s -> %s\n' "$previous_main" "$current_main"
     git diff --name-status "$previous_main" "$current_main"
   fi
-  if [[ -n "$previous_prs" && "$current_prs" != "$previous_prs" ]]; then
+  if [[ "$prs_available" -eq 1 && -n "$previous_prs" && "$current_prs" != "$previous_prs" ]]; then
     printf 'ALERT open PR state changed:\n%s\n' "$current_prs"
   fi
   if [[ -z "$previous_main" ]]; then
