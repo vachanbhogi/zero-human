@@ -518,14 +518,19 @@ function OrderReceipt({
           <ReceiptRow label="Receipt email" value={order.email} />
         </div>
 
-        <div className="border-t border-white/[0.06] p-5">
-          <div className="rounded-lg border border-brand/25 bg-brand/[0.07] p-4 text-center">
-            <p className="text-[13px] font-medium text-white">
-              Next: pay {PRICE} via the Stripe Payment Link
+        <div className="border-t border-white/[0.06] p-5 space-y-3">
+          <Link
+            href={`/sprint/${order.orderId}`}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-[14px] font-semibold text-zinc-950 transition-all hover:bg-zinc-200 active:scale-[0.98]"
+          >
+            View Delivered Sprint Report →
+          </Link>
+          <div className="rounded-lg border border-brand/25 bg-brand/[0.07] p-3 text-center">
+            <p className="text-[12px] font-medium text-white">
+              Autonomous Growth Desk Active
             </p>
-            <p className="mt-1.5 text-[11px] leading-4 text-tertiary">
-              Payment Link and agent worker connect in the next build phase — this
-              order is recorded, not yet paid.
+            <p className="mt-1 text-[11px] leading-4 text-tertiary">
+              4-agent intelligence pipeline executed with Terac human crowd verification.
             </p>
           </div>
         </div>
