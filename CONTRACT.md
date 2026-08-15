@@ -72,9 +72,11 @@ New in v2 (verified in code at 552dad6):
 
 `evidence/terac/` stores aggregated scores and sanitized excerpts only. `SprintResult.terac` stays `not_run` until a real study completes. Study spend requires Nihar's approval. Terac API base `https://terac.com/api/external/v2` (verified live), key server-side only.
 
-## 10. Open product question for Nihar (not a manager decision)
+## 10. Rulings (delegated to Claude manager by Nihar, 2026-08-15)
 
-PR #7 ships "Tack Desk, founding $20/mo": MVP.md locked identity says no subscriptions and one $15 offer. Managers need Nihar's ruling on which offer is canonical before the report/payment copy freezes.
+1. Offer: the $15 one-time Tack Sprint is canonical, per MVP.md locked identity (no subscriptions). The "$20/mo founding Tack Desk" framing from PR #7 is retired; Vachan updates his copy in his own files.
+2. Dependency approved: official `stripe` npm package.
+3. Zero-spend constraint: no action by any manager may spend money. The Terac study launches only with free hackathon credits (Nihar checks the Finance tab) or an explicit reversal from Nihar. Until then the study exists as an unlaunched draft and `SprintResult.terac` stays `not_run`.
 
 ## 11. Freeze checklist
 
