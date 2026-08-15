@@ -62,4 +62,7 @@ export interface ScannedProfile {
   name?: string;
   niche?: string;
   summary?: string;
+  audience?: string;
+  value_proposition?: string;
+  competitors?: string[];
 }

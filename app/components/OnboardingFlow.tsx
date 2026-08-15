@@ -69,12 +69,17 @@ export function OnboardingFlow() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to scan site");
 
+      const competitorsStr = Array.isArray(data.profile?.competitors)
+        ? data.profile.competitors.join(", ")
+        : "";
+
       setBrief((prev) => ({
         ...prev,
         url: data.websiteUrl ?? prev.url,
         company: data.profile?.name ?? prev.company,
         niche: data.profile?.niche ?? prev.niche,
-        audience: data.profile?.summary ?? prev.audience,
+        audience: data.profile?.audience ?? data.profile?.summary ?? prev.audience,
+        competitors: competitorsStr || prev.competitors,
       }));
       setScanned(true);
       setShowMoreDetails(true);
