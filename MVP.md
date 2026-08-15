@@ -25,11 +25,12 @@
 +-------------------------------------------------------------------------------+
 |                                  THE 2-HOUR DUO                                |
 +------------------------------------+------------------------------------------+
-|  NIHAR (Chief Architect / AI Core)  |  VACHAN (Chief Revenue / Product & Demo) |
-|  * High compute credit allocation   |  * Rapid frontend, Stripe & QR codes    |
-|  * Heavy multi-step agent pipeline |  * Floor sales & customer acquisition    |
-|  * Terac MCP Human-in-the-Loop     |  * Customer interviews & feedback loop   |
-|  * Deep reasoning & data delivery  |  * Demo orchestration & deck/pitching    |
+|  NIHAR (Chief Architect / AI & Payments) |  VACHAN (Chief Revenue / Product & Demo) |
+|  * High compute credit allocation   |  * Rapid frontend & intake portal        |
+|  * Stripe Payment Link & QR rails   |  * Floor sales & customer acquisition    |
+|  * Heavy multi-step agent pipeline |  * Customer interviews & feedback loop   |
+|  * Terac MCP Human-in-the-Loop     |  * Demo orchestration & deck/pitching    |
+|  * Deep reasoning & data delivery  |                                          |
 +------------------------------------+------------------------------------------+
 ```
 
@@ -45,7 +46,7 @@
 [ 📋 BACKLOG / FORBIDDEN ]       [ ⏳ 0:00–0:15: STRATEGY ]       [ 🏗️ 0:15–0:30: SCAFFOLDING ]
 - User Auth / Login              - [ALL] Lock $20 Offer Pitch     - [NIHAR] Multi-Agent Pipeline
 - Custom Database Schemas        - [ALL] Define Core Deliverable  - [NIHAR] Terac MCP Study Config
-- Elaborate SaaS Dashboard       - [ALL] Assign Target Audiences  - [VACHAN] Stripe Link & QR Code
+- Elaborate SaaS Dashboard       - [ALL] Assign Target Audiences  - [NIHAR] Stripe Link & QR Code
 - Legacy Dopa Architecture       - [ALL] Set Up Env & API Keys    - [VACHAN] 1-Page Minimal UI/Form
 - Complex Frontend Animations    - [VACHAN] Prep Prospect List    - [VACHAN] Pitch Script Ready
 
@@ -83,8 +84,8 @@
 ---
 
 #### Column 3: 🏗️ Phase 2 (0:15 – 0:30) — Rapid Scaffolding & Payment Rails
-* 🎴 **CARD 2.1: Stripe Payment Link & Mobile QR Code** `[VACHAN]`
-  * **Assignee**: Vachan
+* 🎴 **CARD 2.1: Stripe Payment Link & Mobile QR Code** `[NIHAR]`
+  * **Assignee**: Nihar
   * **Description**: Create a live $10 / $15 / $20 Stripe Payment Link with Apple Pay / Credit Card enabled. Generate a high-res QR code saved to phone lock screen and printed/displayed.
   * **Acceptance Criteria**: Test purchase with $1 or live card validates webhook/success redirect.
 * 🎴 **CARD 2.2: Minimal Web Input Interface** `[VACHAN]`
@@ -167,15 +168,16 @@ gantt
     section Strategy
     Lock Offer & Setup (Both)       :done, 0, 15
 
-    section Nihar (Compute / Agent / Terac)
-    Agent Pipeline Scaffolding      :active, 15, 30
-    Terac MCP Integration & Prompts :30, 60
-    Report Generator & Multi-Agent  :60, 75
-    Live Customer Job Execution     :75, 100
-    Before/After Evidence Export    :100, 120
+    section Nihar (Compute / Agent / Terac / Stripe)
+    Agent Pipeline Scaffolding        :active, 15, 25
+    Stripe Link & QR Code Rails       :active, 25, 35
+    Terac MCP Integration & Prompts   :35, 65
+    Report Generator & Multi-Agent    :65, 80
+    Live Customer Job Execution       :80, 100
+    Before/After Evidence Export      :100, 120
 
     section Vachan (Revenue / Sales / UI)
-    Stripe Link & QR Code Scaffolding :active, 15, 30
+    1-Page Intake Form Scaffolding    :active, 15, 30
     Floor Sales Blitz (10 Pitches)    :30, 75
     Close 1st Paid Customer           :75, 80
     Customer Delivery & Testimonial   :80, 100
