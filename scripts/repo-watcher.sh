@@ -4,18 +4,20 @@ set -euo pipefail
 repo_dir="${1:-$(git rev-parse --show-toplevel)}"
 interval="${WATCH_INTERVAL_SECONDS:-60}"
 state_file="${WATCH_STATE_FILE:-${TMPDIR:-/tmp}/zero-human-repo-watcher.state}"
+max_cycles="${WATCH_MAX_CYCLES:-0}"
+cycles=0
 
 cd "$repo_dir"
 git rev-parse --is-inside-work-tree >/dev/null
 
 snapshot_prs() {
-  if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
-    gh pr list --state open --limit 100 --json number,title,headRefName,updatedAt,url \
-      --jq 'sort_by(.number) | .[] | "#\(.number) \(.headRefName) \(.updatedAt) \(.title) \(.url)"'
-  else
-    printf '%s\n' "gh unavailable or unauthenticated; open PR summaries unavailable"
-  fi
+  command -v gh >/dev/null 2>&1 || return 1
+  gh auth status >/dev/null 2>&1 || return 1
+  gh pr list --state open --limit 100 --json number,title,headRefName,updatedAt,url \
+    --jq 'sort_by(.number) | .[] | "#\(.number) \(.headRefName) \(.updatedAt) \(.title) \(.url)"'
 }
+
+warn() { printf '[%s] WARNING: %s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" "$*" >&2; }
 
 previous_main=""
 previous_prs=""
@@ -25,9 +27,21 @@ if [[ -f "$state_file" ]]; then
 fi
 
 while :; do
-  git fetch --prune origin
-  current_main="$(git rev-parse origin/main)"
-  current_prs="$(snapshot_prs)"
+  if ! git fetch --prune origin; then
+    warn "git fetch failed; preserving last good state and retrying"
+    sleep "$interval"
+    continue
+  fi
+  if ! current_main="$(git rev-parse origin/main)"; then
+    warn "reading origin/main failed; preserving last good state and retrying"
+    sleep "$interval"
+    continue
+  fi
+  if ! current_prs="$(snapshot_prs)"; then
+    warn "open PR snapshot failed; preserving last good state and retrying"
+    sleep "$interval"
+    continue
+  fi
 
   if [[ -n "$previous_main" && "$current_main" != "$previous_main" ]]; then
     printf 'ALERT origin/main moved: %s -> %s\n' "$previous_main" "$current_main"
@@ -46,5 +60,9 @@ while :; do
   } > "$state_file"
   previous_main="$current_main"
   previous_prs="$current_prs"
+  cycles=$((cycles + 1))
+  if [[ "$max_cycles" -gt 0 && "$cycles" -ge "$max_cycles" ]]; then
+    exit 0
+  fi
   sleep "$interval"
 done
