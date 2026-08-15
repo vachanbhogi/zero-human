@@ -1,0 +1,107 @@
+{
+  "_fixtureNote": "Rendering fixture only. 'Acme Analytics' and all data below are fictional and were not produced by a live pipeline run — used to develop/test the report renderer.",
+  "orderId": "ord_fixture_acme001",
+  "company": "Acme Analytics",
+  "generatedAt": "2026-08-01T12:00:00.000Z",
+  "execSummary": "Acme Analytics sells embedded usage-analytics widgets to B2B SaaS product teams. Positioning today leans on breadth of chart types rather than time-to-value, which leaves an opening against incumbents that require weeks of setup. The fastest lever is a self-serve, 15-minute-install pitch aimed at product-led growth teams currently stuck mid-implementation with a competitor.",
+  "competitors": [
+    {
+      "name": "MetricPilot",
+      "positioning": "Enterprise-grade analytics platform with deep customization and a dedicated implementation team.",
+      "weakness": "Typical implementation takes 6-8 weeks and requires a signed SOW before a customer sees a single chart, which stalls PLG-motion buyers who want to ship this quarter.",
+      "sources": [
+        { "url": "https://acme-analytics.example.com", "retrievedAt": "2026-08-01T11:58:12.000Z" }
+      ],
+      "inference": false
+    },
+    {
+      "name": "ChartForge",
+      "positioning": "Open-source charting library with a hosted paid tier for teams that don't want to self-manage.",
+      "weakness": "No built-in usage analytics or event pipeline — teams still have to build and maintain their own event tracking layer, which is the actual pain point buyers are trying to outsource.",
+      "sources": [],
+      "inference": true
+    },
+    {
+      "name": "InsightLoop",
+      "positioning": "Analytics-as-a-feature add-on marketed primarily through app marketplace listings.",
+      "weakness": "Marketplace distribution caps them to platforms they've integrated with; teams on a custom stack can't adopt them at all.",
+      "sources": [],
+      "inference": true
+    }
+  ],
+  "personas": [
+    {
+      "name": "Head of Product, Series B SaaS",
+      "pain": "Needs usage data to justify the next roadmap bet but engineering has no bandwidth to build internal dashboards.",
+      "trigger": "Just finished a board meeting where 'show me adoption numbers' came up and there was no good answer."
+    },
+    {
+      "name": "Founding Engineer, seed-stage startup",
+      "pain": "Spending sprint time hand-rolling charts instead of shipping core product.",
+      "trigger": "Just shipped a v1 feature and now needs to prove usage before the next fundraising update."
+    },
+    {
+      "name": "VP Customer Success",
+      "pain": "Can't see per-account feature adoption, so renewal conversations are guesswork.",
+      "trigger": "A renewal was just lost because a champion left and no one noticed the account had gone quiet."
+    }
+  ],
+  "outreach": [
+    {
+      "angle": "Time-to-value vs. MetricPilot",
+      "subject": "15 minutes vs. 6 weeks",
+      "body": "Hey {{FirstName}}, if you're mid-way through a MetricPilot SOW and still waiting on your first dashboard, worth knowing Acme installs in about 15 minutes with a single script tag. Happy to show you a live account if useful."
+    },
+    {
+      "angle": "Board-meeting adoption numbers",
+      "subject": "For your next board deck",
+      "body": "Saw {{Company}} is scaling fast — when the board asks for adoption numbers next time, do you have a fast answer? Acme gives product teams per-feature usage charts without an engineering ticket."
+    },
+    {
+      "angle": "Founding engineer time savings",
+      "body": "{{FirstName}}, most founding engineers we talk to have burned at least a sprint hand-building usage charts. Acme replaces that entirely — install once, get the dashboards your team needs without maintaining them."
+    },
+    {
+      "angle": "Renewal risk visibility",
+      "subject": "Catch a quiet account before it churns",
+      "body": "Losing a renewal because a champion went quiet and nobody noticed is one of the most avoidable losses in CS. Acme surfaces per-account feature adoption drop-offs automatically so your team sees it before the renewal call."
+    },
+    {
+      "angle": "No-SOW self-serve start",
+      "body": "No sales call required to try it — {{Company}} could have Acme running in a dev environment before this email thread ends. Want the install snippet?"
+    },
+    {
+      "angle": "Replace hand-rolled charting stack",
+      "body": "If your team is maintaining a homegrown charting library on top of raw event data, that's exactly the maintenance burden Acme exists to remove. One install, and the charts + the event pipeline are both handled."
+    },
+    {
+      "angle": "PLG motion speed",
+      "subject": "Ship analytics this sprint, not next quarter",
+      "body": "For product-led teams, waiting 6-8 weeks on an analytics vendor kills momentum. {{Company}} could have real usage data in the product this week instead."
+    },
+    {
+      "angle": "Marketplace-locked competitor gap",
+      "body": "If part of your stack isn't covered by the usual marketplace analytics add-ons, that's a gap Acme is built to fill — it's platform-agnostic by design, not tied to a specific app store integration."
+    },
+    {
+      "angle": "Fundraising-ready usage proof",
+      "subject": "Usage numbers before your next raise",
+      "body": "Investors increasingly want to see product usage, not just revenue. If {{Company}} doesn't have clean adoption charts yet, Acme can get you there before your next update goes out."
+    },
+    {
+      "angle": "Engineering bandwidth reclaim",
+      "body": "What would your eng team ship instead if they got back the time currently spent on internal dashboards? That's the trade Acme is offering — happy to talk specifics for {{Company}}'s stack."
+    }
+  ],
+  "nextMove": "Ship a self-serve install flow (script tag + hosted quickstart) so a PLG-motion prospect can go from signup to first chart in under 15 minutes without a sales call, and lead outbound with a direct time-to-value comparison against MetricPilot.",
+  "variantUsed": "A",
+  "terac": {
+    "aScore": 63,
+    "bScore": 71,
+    "metric": "reply_intent_rate",
+    "studyId": "terac_study_0091"
+  },
+  "sources": [
+    { "url": "https://acme-analytics.example.com", "retrievedAt": "2026-08-01T11:58:12.000Z" }
+  ]
+}
