@@ -3,16 +3,16 @@
 import React, { useState, useEffect } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
-import { BRAND, PRICE } from "@/lib/brand";
+import { BRAND, DELIVERABLE, DISCOUNT, LIST_LABEL, OFFER_NAME, PRICE_LABEL } from "@/lib/brand";
 import { createClient } from "@/utils/supabase/client";
+import { ORDER_STORAGE_KEY } from "@/lib/order-storage";
 import {
   AgentBrief,
-  DELIVERABLE_FOCUS,
   emptyAgentBrief,
-  MARKET_STAGE,
   OrderResponse,
 } from "@/lib/types";
 import { ArrowRight, ChevronRight, Spinner, TackMark } from "./icons";
+import { PayCta } from "./PayCta";
 
 type Step = "import" | "review" | "launch";
 
@@ -20,13 +20,19 @@ const STEPS: Step[] = ["import", "review", "launch"];
 
 const easeOut = [0.23, 1, 0.32, 1] as const;
 
-export function OnboardingFlow() {
+export function OnboardingFlow({
+  initialBrief,
+  businessId,
+}: {
+  initialBrief?: AgentBrief;
+  businessId?: string;
+} = {}) {
   const reduceMotion = useReducedMotion();
-  const [step, setStep] = useState<Step>("import");
-  const [brief, setBrief] = useState<AgentBrief>(emptyAgentBrief);
+  const seeded = Boolean(initialBrief?.url && initialBrief.company);
+  const [step, setStep] = useState<Step>(seeded ? "review" : "import");
+  const [brief, setBrief] = useState<AgentBrief>(initialBrief ?? emptyAgentBrief());
   const [scanning, setScanning] = useState(false);
-  const [scanned, setScanned] = useState(false);
-  const [showMoreDetails, setShowMoreDetails] = useState(false);
+  const [scanned, setScanned] = useState(seeded);
   const [submitting, setSubmitting] = useState(false);
   const [order, setOrder] = useState<OrderResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -82,7 +88,6 @@ export function OnboardingFlow() {
         competitors: competitorsStr || prev.competitors,
       }));
       setScanned(true);
-      setShowMoreDetails(true);
       setStep("review");
     } catch (err) {
       setError(
@@ -117,13 +122,20 @@ export function OnboardingFlow() {
             .split(",")
             .map((c) => c.trim())
             .filter(Boolean),
-          focus: brief.focus,
-          stage: brief.stage,
+          businessId,
         }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
         throw new Error(data.error || "Failed to create order");
+      }
+      try {
+        sessionStorage.setItem(
+          `${ORDER_STORAGE_KEY}:${data.order.orderId}`,
+          JSON.stringify(data.order),
+        );
+      } catch {
+        /* private mode */
       }
       setOrder(data.order);
     } catch (err) {
@@ -151,7 +163,7 @@ export function OnboardingFlow() {
 
       <header className="absolute inset-x-0 top-0 z-10">
         <div className="mx-auto flex h-16 max-w-300 items-center justify-between px-5 md:px-8">
-          <Link href="/" className="flex items-center gap-2 text-white">
+          <Link href="/dashboard" className="flex items-center gap-2 text-white">
             <TackMark className="h-4.5 w-4.5" />
             <span className="text-[15px] font-[510] tracking-[-0.01em]">{BRAND}</span>
             <span className="ml-1 inline-flex items-center gap-1.5 rounded border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.08em] text-secondary">
@@ -185,7 +197,7 @@ export function OnboardingFlow() {
                 <div className="mx-auto w-full max-w-md -translate-y-6">
                   <div className="text-center">
                     <h1 className="text-[40px] font-semibold leading-[1.05] tracking-[-0.035em] text-white sm:text-[48px]">
-                      Start a Tack Sprint
+                      Start {OFFER_NAME}
                     </h1>
                     <p className="mx-auto mt-4 max-w-sm text-[15px] leading-6 text-[#8a8f98]">
                       Paste your URL. Scout reads the site and drafts a brief
@@ -241,7 +253,7 @@ export function OnboardingFlow() {
                   </button>
 
                   <div className="mt-10 flex items-center justify-center gap-5 text-[12px] text-tertiary">
-                    <span>{PRICE} flat</span>
+                    <span>{PRICE_LABEL} founding</span>
                     <span className="h-3 w-px bg-white/10" aria-hidden />
                     <span>~3 min delivery</span>
                     <span className="h-3 w-px bg-white/10" aria-hidden />
@@ -257,14 +269,14 @@ export function OnboardingFlow() {
                 className="w-full"
               >
                 <div className="mx-auto mb-8 max-w-3xl text-center">
-                  <h1 className="text-[32px] font-semibold leading-[1.08] tracking-[-0.035em] sm:text-[40px]">
-                    Review your agent brief
-                  </h1>
-                  <p className="mx-auto mt-3 max-w-lg text-[15px] leading-6 text-[#8a8f98]">
-                    {scanned
-                      ? "We extracted this from your site. Edit anything before the agents run."
-                      : "Set the context our agents use for research, ranking, and outreach."}
-                  </p>
+                    <h1 className="text-[32px] font-semibold leading-[1.08] tracking-[-0.035em] sm:text-[40px]">
+                      Confirm the brief
+                    </h1>
+                    <p className="mx-auto mt-3 max-w-lg text-[15px] leading-6 text-[#8a8f98]">
+                      {scanned
+                        ? "Pulled from the live site. Fix anything that's wrong — this is what the agents will use."
+                        : "URL, who it's for, where to send the report. That's the whole intake."}
+                    </p>
                 </div>
 
                 <div className="grid w-full gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
@@ -314,53 +326,14 @@ export function OnboardingFlow() {
                       />
                     </Field>
 
-                    <div className="border-t border-white/[0.06] pt-4">
-                      <button
-                        type="button"
-                        onClick={() => setShowMoreDetails((open) => !open)}
-                        aria-expanded={showMoreDetails}
-                        className="flex w-full items-center justify-between text-left text-[13px] font-medium text-secondary transition-colors hover:text-white"
-                      >
-                        More context
-                        <span
-                          className={`text-tertiary transition-transform duration-200 ${
-                            showMoreDetails ? "rotate-180" : ""
-                          }`}
-                          aria-hidden
-                        >
-                          ▾
-                        </span>
-                      </button>
-
-                      {showMoreDetails ? (
-                        <div className="mt-4 space-y-5">
-                          <Field label="Known competitors" hint="Comma-separated">
-                            <input
-                              value={brief.competitors}
-                              onChange={(e) => setField("competitors", e.target.value)}
-                              placeholder="Rival Labs, Brand X"
-                              className={inputClass}
-                            />
-                          </Field>
-
-                          <Field label="Deliverable focus">
-                            <ChipRow
-                              options={DELIVERABLE_FOCUS}
-                              value={brief.focus}
-                              onChange={(v) => setField("focus", v)}
-                            />
-                          </Field>
-
-                          <Field label="Stage">
-                            <ChipRow
-                              options={MARKET_STAGE}
-                              value={brief.stage}
-                              onChange={(v) => setField("stage", v)}
-                            />
-                          </Field>
-                        </div>
-                      ) : null}
-                    </div>
+                    <Field label="Known competitors" hint="Optional · comma-separated">
+                      <input
+                        value={brief.competitors}
+                        onChange={(e) => setField("competitors", e.target.value)}
+                        placeholder="Whoever they get compared to"
+                        className={inputClass}
+                      />
+                    </Field>
 
                     {error ? <p className="text-[12px] text-red-400">{error}</p> : null}
 
@@ -399,48 +372,44 @@ export function OnboardingFlow() {
                 <div className="mx-auto w-full max-w-2xl -translate-y-6">
                   <div className="text-center">
                     <h1 className="text-[36px] font-semibold leading-[1.08] tracking-[-0.035em] sm:text-[44px]">
-                      Dispatch the desk
+                      Pay. Agents run. You get the pack.
                     </h1>
                     <p className="mx-auto mt-4 max-w-md text-[16px] leading-7 text-[#8a8f98]">
-                      {PRICE} one-time for {brief.company.trim() || "your company"}. Four
-                      agents research, draft, and rate the work before delivery.
+                      {PRICE_LABEL} founding for {brief.company.trim() || brief.url.trim() || "this URL"}.
+                      List {LIST_LABEL}. {DISCOUNT} if you start today.
                     </p>
                   </div>
 
                   <div className="zh-panel mt-10 p-6 text-left sm:p-8">
                     <div className="space-y-3">
-                      <PipelineRow
-                        index={1}
-                        name="Scout"
-                        detail="Reads your site and maps the offer"
-                      />
-                      <PipelineRow
-                        index={2}
-                        name="Strategist"
-                        detail="Finds competitor gaps and positioning angles"
-                      />
-                      <PipelineRow
-                        index={3}
-                        name="Terac panel"
-                        detail="Real humans rate the strongest variants"
-                      />
-                      <PipelineRow
-                        index={4}
-                        name="Publisher"
-                        detail="Ships the executive growth report"
-                      />
+                      {DELIVERABLE.map((item, i) => (
+                        <PipelineRow
+                          key={item}
+                          index={i + 1}
+                          name={item}
+                          detail={
+                            i === 3
+                              ? "The one thing to do this week — not a 12-week retainer"
+                              : i === 2
+                                ? "Copy, send, don't wait for a dashboard"
+                                : i === 1
+                                  ? "Who to talk to, from this site"
+                                  : "Gaps vs who they get compared to"
+                          }
+                        />
+                      ))}
                     </div>
 
                     <div className="mt-6 rounded-lg border border-white/[0.06] bg-[#0c0d0e] p-4">
                       <div className="flex items-baseline justify-between">
-                        <span className="text-[13px] text-secondary">Total due today</span>
+                        <span className="text-[13px] text-secondary">Due today · founding month</span>
                         <span className="font-mono text-[18px] font-medium text-white">
-                          {PRICE}
+                          {PRICE_LABEL}
                         </span>
                       </div>
                       <p className="mt-2 text-[11px] leading-4 text-tertiary">
-                        Payment is collected through our Stripe Payment Link. Nothing runs
-                        until the order is created.
+                        Stripe Payment Link next. Agents stay idle until payment is real.
+                        Terac preference numbers only after a live study — drafts stay labeled.
                       </p>
                     </div>
 
@@ -468,7 +437,7 @@ export function OnboardingFlow() {
                             Creating order…
                           </>
                         ) : (
-                          `Create order • ${PRICE}`
+                          `Create order • ${PRICE_LABEL}`
                         )}
                       </button>
                     </div>
@@ -514,18 +483,32 @@ function OrderReceipt({
           <ReceiptRow label="Website" value={order.url} mono />
           <ReceiptRow label="Company" value={order.company} />
           <ReceiptRow label="Niche" value={order.niche} />
-          <ReceiptRow label="Focus" value={order.focus} />
-          <ReceiptRow label="Receipt email" value={order.email} />
+          <ReceiptRow label="Audience" value={order.audience} />
+          <ReceiptRow label="Email" value={order.email} />
         </div>
 
-        <div className="border-t border-white/[0.06] p-5">
-          <div className="rounded-lg border border-brand/25 bg-brand/[0.07] p-4 text-center">
-            <p className="text-[13px] font-medium text-white">
-              Next: pay {PRICE} via the Stripe Payment Link
+        <div className="border-t border-white/[0.06] p-5 space-y-3">
+          <PayCta className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-[14px] font-medium text-[#08090a] transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.97]">
+            Pay {PRICE_LABEL} founding
+          </PayCta>
+          <Link
+            href={`/sprint/${order.orderId}`}
+            className="inline-flex w-full items-center justify-center rounded-xl border border-white/12 bg-white/4 px-5 py-3 text-[14px] text-white transition-colors hover:bg-white/8"
+          >
+            View the pack
+          </Link>
+          <Link
+            href="/dashboard?tab=sprints"
+            className="inline-flex w-full items-center justify-center text-[13px] text-secondary hover:text-white"
+          >
+            Open desk
+          </Link>
+          <div className="rounded-lg border border-brand/25 bg-brand/[0.07] p-3 text-center">
+            <p className="text-[12px] font-medium text-white">
+              Next: pay {PRICE_LABEL} founding, then open the desk
             </p>
-            <p className="mt-1.5 text-[11px] leading-4 text-tertiary">
-              Payment Link and agent worker connect in the next build phase — this
-              order is recorded, not yet paid.
+            <p className="mt-1 text-[11px] leading-4 text-tertiary">
+              Unpaid orders stay unpaid. Don&apos;t treat this receipt as revenue.
             </p>
           </div>
         </div>
@@ -594,26 +577,10 @@ function AgentBriefCard({ brief }: { brief: AgentBrief }) {
     .filter(Boolean)
     .slice(0, 4);
 
-  const fields = [
-    brief.company,
-    brief.niche,
-    brief.audience,
-    brief.email,
-    brief.focus,
-    brief.stage,
-  ];
-  const filled = fields.filter((f) => f.trim()).length;
-  const completeness = Math.round((filled / fields.length) * 100);
-
   return (
     <div className="zh-panel flex flex-col overflow-hidden">
       <div className="border-b border-white/[0.06] px-4 py-3">
-        <div className="flex items-center justify-between">
-          <span className="text-[12px] font-medium text-white">Agent brief</span>
-          <span className="rounded-[5px] border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[10px] text-secondary">
-            Live preview
-          </span>
-        </div>
+        <span className="text-[12px] font-medium text-white">This desk</span>
       </div>
 
       <div className="flex-1 space-y-4 p-4">
@@ -623,18 +590,16 @@ function AgentBriefCard({ brief }: { brief: AgentBrief }) {
           </span>
           <div className="min-w-0">
             <p className="truncate text-[14px] font-medium text-white">
-              {brief.company.trim() || "Company name"}
+              {brief.company.trim() || "Company"}
             </p>
             <p className="truncate text-[11px] text-tertiary">
-              {brief.url.trim() || "No website"}
+              {brief.url.trim() || "No website yet"}
             </p>
           </div>
         </div>
 
         <PreviewRow label="Niche" value={brief.niche} />
-        <PreviewRow label="Audience" value={brief.audience} />
-        <PreviewRow label="Focus" value={brief.focus} />
-        <PreviewRow label="Stage" value={brief.stage} />
+        <PreviewRow label="Who it's for" value={brief.audience} />
 
         {competitorList.length > 0 ? (
           <div>
@@ -655,19 +620,9 @@ function AgentBriefCard({ brief }: { brief: AgentBrief }) {
         ) : null}
 
         <div className="mt-auto rounded-lg border border-white/[0.06] bg-[#0c0d0e] p-3">
-          <div className="flex items-center justify-between text-[11px]">
-            <span className="text-tertiary">Brief completeness</span>
-            <span className="font-mono text-secondary">{completeness}%</span>
-          </div>
-          <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/[0.06]">
-            <div
-              className="h-full rounded-full bg-brand transition-[width] duration-300 ease-out"
-              style={{ width: `${completeness}%` }}
-            />
-          </div>
-          <p className="mt-2 text-[11px] leading-4 text-tertiary">
-            Agents use this context for competitor research, Terac rating, and the
-            final growth report.
+          <p className="text-[11px] leading-4 text-tertiary">
+            Locked offer: teardown, personas, 10 lines, one next move. Terac
+            rates copy after pay — not a feature you pick.
           </p>
         </div>
       </div>
@@ -710,38 +665,6 @@ function Field({
       </span>
       {children}
     </label>
-  );
-}
-
-function ChipRow({
-  options,
-  value,
-  onChange,
-}: {
-  options: readonly string[];
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {options.map((option) => {
-        const selected = value === option;
-        return (
-          <button
-            key={option}
-            type="button"
-            onClick={() => onChange(option)}
-            className={`rounded-[5px] border px-2.5 py-1.5 text-[11px] transition-[border-color,background-color,color,transform] duration-150 active:scale-[0.97] ${
-              selected
-                ? "border-white/20 bg-white/[0.08] font-medium text-white"
-                : "border-white/[0.08] bg-transparent text-secondary hover:border-white/15 hover:text-white"
-            }`}
-          >
-            {option}
-          </button>
-        );
-      })}
-    </div>
   );
 }
 

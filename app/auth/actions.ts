@@ -66,7 +66,7 @@ function safeFullName(value: string): string | null {
 export async function login(formData: FormData) {
   const email = validEmail(String(formData.get("email") ?? ""));
   const password = String(formData.get("password") ?? "");
-  const redirectTo = String(formData.get("redirectTo") ?? "/onboarding");
+  const redirectTo = String(formData.get("redirectTo") ?? "/dashboard");
   const origin = await getOrigin();
   const destination = safeNextPath(redirectTo, origin);
 
@@ -93,7 +93,7 @@ export async function signup(formData: FormData) {
   const email = validEmail(String(formData.get("email") ?? ""));
   const password = String(formData.get("password") ?? "");
   const fullName = safeFullName(String(formData.get("fullName") ?? ""));
-  const redirectTo = String(formData.get("redirectTo") ?? "/onboarding");
+  const redirectTo = String(formData.get("redirectTo") ?? "/dashboard");
 
   const origin = await getOrigin();
   const destination = safeNextPath(redirectTo, origin);

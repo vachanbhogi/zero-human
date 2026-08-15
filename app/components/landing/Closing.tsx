@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { BRAND, PRICE } from "@/lib/brand";
+import { BRAND, CTA, PRICE_LABEL } from "@/lib/brand";
 import { TackMark } from "../icons";
+import { PayCta } from "../PayCta";
 
 const useCases = [
   {
-    title: "Venue founders",
-    body: "Someone next to you has a URL and twenty minutes. Tack is the impulse buy: pay, paste, walk away with outreach.",
+    title: "Founders you can call today",
+    body: "A URL and a card. Tack is the close: 90% off the desk, first pack in about 3 minutes, stay on the line.",
   },
   {
     title: "Agent-run ops",
@@ -37,7 +38,7 @@ export function UseCases() {
           ))}
         </div>
         <p className="mt-16 max-w-130 text-[16px] leading-7 text-secondary">
-          Sample panels on this page are labeled illustrations of the sprint —
+          Sample panels on this page are labeled illustrations of the desk —
           not live customer results.
         </p>
       </div>
@@ -56,18 +57,15 @@ export function FinalCta() {
           Agents doing the work.
         </h2>
         <div className="relative mt-8 flex flex-wrap items-center justify-center gap-3">
+          <PayCta className="inline-flex h-10 items-center rounded-lg bg-white px-4 text-[14px] font-medium text-[#08090a] transition-[transform,opacity] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:opacity-90 active:scale-[0.97]">
+            {CTA}
+          </PayCta>
           <Link
-            href="/onboarding"
-            className="inline-flex h-10 items-center rounded-lg bg-white px-4 text-[14px] font-medium text-[#08090a] transition-[transform,opacity] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:opacity-90 active:scale-[0.97]"
-          >
-            Run a {PRICE} sprint
-          </Link>
-          <a
-            href="#pipeline"
+            href="/call"
             className="inline-flex h-10 items-center rounded-lg border border-white/10 px-4 text-[14px] text-foreground transition-[transform,background-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-white/4 active:scale-[0.97]"
           >
-            See the loop
-          </a>
+            Open the call script
+          </Link>
         </div>
       </div>
     </section>
@@ -82,16 +80,16 @@ export function Footer() {
           <TackMark className="h-4 w-4 text-white" />
           <span className="text-[14px] font-medium text-white">{BRAND}</span>
           <span className="ml-2 text-[12px] text-tertiary">
-            © {new Date().getFullYear()} {BRAND}
+            © {new Date().getFullYear()} {BRAND} · founding {PRICE_LABEL}
           </span>
         </div>
         <div className="flex flex-wrap items-center gap-6 text-[13px] text-secondary">
           <Link href="/onboarding" className="font-medium text-white transition-colors hover:text-white/80">
-            Start sprint
+            Start desk
           </Link>
-          <a href="#pipeline" className="transition-colors hover:text-white">
-            How it runs
-          </a>
+          <Link href="/call" className="transition-colors hover:text-white">
+            Call script
+          </Link>
         </div>
       </div>
     </footer>
