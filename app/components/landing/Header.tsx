@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BRAND, PRICE } from "@/lib/brand";
 import { TackMark } from "../icons";
+import { AuthLinks } from "@/components/auth/AuthLinks";
 
 const nav = [
   { label: "Sprint", href: "#pipeline" },
@@ -8,7 +9,7 @@ const nav = [
   { label: "Deliverable", href: "#report" },
 ];
 
-export function Header() {
+export async function Header() {
   return (
     <header className="absolute inset-x-0 top-0 z-50">
       <div className="mx-auto flex h-16 max-w-300 items-center justify-between gap-4 px-5 md:px-8">
@@ -36,9 +37,13 @@ export function Header() {
 
           <div className="mx-1.5 hidden h-4 w-px shrink-0 bg-white/10 sm:block" />
 
+          <div className="flex shrink-0 items-center gap-1">
+            <AuthLinks />
+          </div>
+
           <Link
             href="/onboarding"
-            className="inline-flex h-8 items-center rounded-lg bg-white px-3 text-[13px] font-medium text-[#08090a] transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.97]"
+            className="ml-1 inline-flex h-8 items-center rounded-lg bg-white px-3 text-[13px] font-medium text-[#08090a] transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.97]"
           >
             Run a {PRICE} sprint
           </Link>

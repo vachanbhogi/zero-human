@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { BRAND, PRICE } from "@/lib/brand";
+import { createClient } from "@/utils/supabase/client";
 import {
   AgentBrief,
   DELIVERABLE_FOCUS,
@@ -29,6 +30,21 @@ export function OnboardingFlow() {
   const [submitting, setSubmitting] = useState(false);
   const [order, setOrder] = useState<OrderResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [authenticatedUser, setAuthenticatedUser] = useState<string | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user?.email) {
+        setAuthenticatedUser(user.email);
+        setBrief((prev) => ({
+          ...prev,
+          email: prev.email || user.email || "",
+          company: prev.company || (user.user_metadata?.full_name as string) || "",
+        }));
+      }
+    });
+  }, []);
 
   const stepIndex = STEPS.indexOf(step);
 
@@ -276,7 +292,14 @@ export function OnboardingFlow() {
                       />
                     </Field>
 
-                    <Field label="Delivery email" hint="Where the report lands">
+                    <Field
+                      label="Delivery email"
+                      hint={
+                        authenticatedUser
+                          ? "✓ Verified from your account"
+                          : "Where the report lands"
+                      }
+                    >
                       <input
                         type="email"
                         value={brief.email}
