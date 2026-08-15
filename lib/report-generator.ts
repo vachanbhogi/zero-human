@@ -1,37 +1,32 @@
+import { OrderResponse } from "@/lib/types";
+import { LIST_LABEL, PRICE_LABEL } from "@/lib/brand";
+
 export interface CompetitorTeardown {
   name: string;
-  marketShare: string;
-  strength: string;
-  vulnerability: string;
-  winningAngle: string;
+  whatTheyLeadWith: string;
+  gapYouCanOwn: string;
 }
 
 export interface CustomerPersona {
-  role: string;
-  seniority: string;
-  companyProfile: string;
-  corePainPoint: string;
-  triggerEvent: string;
-  objectionKiller: string;
+  who: string;
+  whyTheyCare: string;
+  firstMessage: string;
 }
 
 export interface OutreachPlay {
   id: number;
-  channel: "Cold Email" | "LinkedIn DM" | "Twitter / X";
+  channel: "Email" | "In person" | "DM";
   subject?: string;
-  hook: string;
   body: string;
   cta: string;
 }
 
-export interface TeracEvidence {
+export interface TeracDraft {
   question: string;
+  cohort: string;
   variantA: string;
   variantB: string;
-  winner: "Variant B" | "Variant A";
-  preferenceDelta: string;
-  sampleSize: number;
-  keyFinding: string;
+  status: "queued";
 }
 
 export interface SprintReportData {
@@ -39,218 +34,195 @@ export interface SprintReportData {
   companyName: string;
   url: string;
   niche: string;
-  stage: string;
+  audience: string;
   generatedAt: string;
-  latencySeconds: number;
-  executiveSummary: {
-    coreOffering: string;
-    targetMarket: string;
-    positioningMoat: string;
-    recommendedMotion: string;
-  };
+  summary: string;
   competitors: CompetitorTeardown[];
   personas: CustomerPersona[];
   outreachPlays: OutreachPlay[];
-  teracEvidence: TeracEvidence;
-  nextMoveRecommendation: {
+  terac: TeracDraft;
+  nextMove: {
     title: string;
-    timeframe: string;
-    actionSteps: string[];
-    expectedImpact: string;
+    why: string;
+    steps: string[];
   };
 }
 
-export function generateSprintReport(
-  orderId: string,
-  url: string,
-  company?: string,
-  niche?: string,
-  audience?: string,
-  competitorsList?: string[]
-): SprintReportData {
-  const cleanUrl = url.replace(/^https?:\/\//, "").replace(/\/$/, "");
-  const brand =
-    company?.trim() ||
-    cleanUrl.split(".")[0].charAt(0).toUpperCase() + cleanUrl.split(".")[0].slice(1);
-  const targetNiche = niche?.trim() || "B2B SaaS / Growth Infrastructure";
-  const targetAudience =
-    audience?.trim() || "High-velocity founders, product leaders, and growth operators";
+function displayHost(url: string): string {
+  try {
+    const withProto = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+    return new URL(withProto).hostname.replace(/^www\./, "");
+  } catch {
+    return url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+  }
+}
 
-  const rawCompetitors = competitorsList?.filter(Boolean).length
-    ? competitorsList
-    : ["Incumbent Leader", "Point Solution Rival", "Legacy Enterprise Tool"];
+function brandFromOrder(order: OrderResponse): string {
+  if (order.company?.trim()) return order.company.trim();
+  const host = displayHost(order.url);
+  const stem = host.split(".")[0] ?? "Company";
+  return stem.charAt(0).toUpperCase() + stem.slice(1);
+}
 
-  const competitors: CompetitorTeardown[] = [
-    {
-      name: rawCompetitors[0] || "Incumbent Platform",
-      marketShare: "42% Industry Share",
-      strength: "Deep enterprise contracts and broad feature set.",
-      vulnerability: "Slow onboarding, bloated pricing tiers, and lack of autonomous workflows.",
-      winningAngle: `Position ${brand} as the modern, zero-overhead alternative delivering 10x faster time-to-value.`,
-    },
-    {
-      name: rawCompetitors[1] || "Point Solution Rival",
-      marketShare: "22% Industry Share",
-      strength: "Niche feature focus in single vertical.",
-      vulnerability: "High manual friction requiring developer duct-taping and constant upkeep.",
-      winningAngle: `Highlight ${brand}'s unified autonomous intelligence that replaces 3 fragmented point tools.`,
-    },
-    {
-      name: rawCompetitors[2] || "Legacy Alternative",
-      marketShare: "18% Industry Share",
-      strength: "Long-standing legacy brand recognition.",
-      vulnerability: "Expensive per-seat pricing models and outdated user experience.",
-      winningAngle: `Target dissatisfied users migrating away from clunky contracts with a frictionless self-serve entry.`,
-    },
+function competitorNames(order: OrderResponse, brand: string): string[] {
+  const named = (order.competitors ?? []).map((c) => c.trim()).filter(Boolean);
+  if (named.length >= 3) return named.slice(0, 5);
+  const fallbacks = [
+    `${brand} lookalike on Product Hunt`,
+    "The incumbent they get compared to",
+    "The DIY spreadsheet they replace",
   ];
+  return [...named, ...fallbacks].slice(0, 3);
+}
+
+export function generateSprintReport(order: OrderResponse): SprintReportData {
+  const brand = brandFromOrder(order);
+  const host = displayHost(order.url);
+  const niche = order.niche?.trim() || "early-stage product";
+  const audience =
+    order.audience?.trim() ||
+    "founders and builders who already feel the problem";
+  const names = competitorNames(order, brand);
+  const primaryBuyer = audience.split(/,| and /)[0]?.trim() || audience;
+
+  const competitors: CompetitorTeardown[] = names.map((name, i) => {
+    if (i === 0) {
+      return {
+        name,
+        whatTheyLeadWith: "Broad platform language. Sounds big, sells slowly.",
+        gapYouCanOwn: `${brand} wins by being specific: one URL in, a campaign out today.`,
+      };
+    }
+    if (i === 1) {
+      return {
+        name,
+        whatTheyLeadWith: "Feature list and 'AI-powered' with no proof of a sendable artifact.",
+        gapYouCanOwn: `Lead with the artifact — teardown, 10 lines, one next move — not the model.`,
+      };
+    }
+    return {
+      name,
+      whatTheyLeadWith: "Manual research they never finish during a hackathon.",
+      gapYouCanOwn: `${brand} is the desk that actually runs while they pitch.`,
+    };
+  });
 
   const personas: CustomerPersona[] = [
     {
-      role: "Founder / CEO",
-      seniority: "Executive",
-      companyProfile: "Seed to Series B ($1M - $10M ARR)",
-      corePainPoint: "Burning engineering hours on manual workflows instead of shipping product.",
-      triggerEvent: "Preparing for next funding round or aggressive Q3 revenue targets.",
-      objectionKiller: `Guaranteed ROI within 14 days without requiring additional engineering hires.`,
+      who: primaryBuyer,
+      whyTheyCare: `They need something they can send tonight for ${niche}, not a login to a marketing suite.`,
+      firstMessage: `Paste ${host}. Get the teardown and 10 lines. Pay ${PRICE_LABEL} founding if the first three are usable.`,
     },
     {
-      role: "VP of Growth / Demand Gen",
-      seniority: "Director / VP",
-      companyProfile: "High-growth B2B tech companies",
-      corePainPoint: "High customer acquisition cost and low cold outreach conversion rates.",
-      triggerEvent: "Plateaued inbound pipeline and need for high-intent outbound channels.",
-      objectionKiller: `Tested with real human raters on Terac crowd benchmarking to ensure maximum copy response rate.`,
-    },
-    {
-      role: "Lead Product Architect",
-      seniority: "Senior / Staff",
-      companyProfile: "Engineering-led organizations",
-      corePainPoint: "Maintaining custom internal scripts and brittle integrations.",
-      triggerEvent: "Technical debt review or team capacity bottleneck.",
-      objectionKiller: `Drop-in API with 99.99% uptime and zero maintenance burden.`,
+      who: "Someone standing next to them with a live URL",
+      whyTheyCare: "Impulse buy. They can evaluate the product by reading the report, not a pitch deck.",
+      firstMessage: `Want us to run Tack on yours? URL, ${PRICE_LABEL} founding (${LIST_LABEL} list), ~3 minutes.`,
     },
   ];
 
   const outreachPlays: OutreachPlay[] = [
     {
       id: 1,
-      channel: "Cold Email",
-      subject: `quick teardown of {{Company}}'s growth bottleneck`,
-      hook: `Noticed you're scaling operations in the ${targetNiche} space.`,
-      body: `Hey {{FirstName}},\n\nMost teams in your vertical lose 12+ hours a week on manual workflow friction while competitors like ${rawCompetitors[0]} lock users into bloated contracts.\n\nWe ran an autonomous teardown on {{Company}} showing how to cut 80% of routine overhead using ${brand}.\n\nMind if I send over the 2-page brief?`,
-      cta: `Open to a 60-second review?`,
+      channel: "In person",
+      body: `We're an agent-run growth desk. Give me ${host} — we map competitors, write 10 outreach lines, and have real people on Terac pick the stronger angle. ${LIST_LABEL} list. ${PRICE_LABEL} founding if you pay on this call. Want us to run it on yours?`,
+      cta: "Open the Payment Link on the phone.",
     },
     {
       id: 2,
-      channel: "LinkedIn DM",
-      hook: `Saw your recent push around {{Company}}'s product roadmap.`,
-      body: `Hey {{FirstName}}, quick observation—your positioning against ${rawCompetitors[0]} is strong, but there's an untapped wedge in how you frame ROI for ${targetAudience.slice(0, 30)}.\n\nWe built an autonomous intelligence loop that identified 3 competitor blindspots you can exploit immediately.`,
-      cta: `Happy to drop the notes here if you're interested?`,
+      channel: "Email",
+      subject: `3-minute teardown of ${host}`,
+      body: `Hey — we ran ${brand} (${host}) through Tack. Scout pulled the live site, we drafted competitor gaps in ${niche}, and queued two headline variants for a Terac preference study (general population).\n\nIf the first three lines below are wrong, tell us. If they're right, you can send them tonight.`,
+      cta: "Reply with the URL you actually want us to run.",
     },
     {
       id: 3,
-      channel: "Cold Email",
-      subject: `why teams are switching from ${rawCompetitors[0]} to ${brand}`,
-      hook: `Are you currently locked into legacy per-seat pricing?`,
-      body: `Hey {{FirstName}},\n\nWe surveyed high-growth operators and found that 68% are actively looking to replace bloated legacy tools with modern, autonomous engines.\n\n${brand} delivers the exact same output in 3 minutes with zero manual setup.`,
-      cta: `Worth a quick look this week?`,
+      channel: "Email",
+      subject: `${names[0]} vs ${brand} — the gap`,
+      body: `Quick note: ${names[0]} leads with platform. ${brand} can lead with a finished campaign. That's the wedge for ${primaryBuyer}.\n\nWe wrote 10 lines from that angle. Want the pack?`,
+      cta: "Yes — send the 10.",
     },
     {
       id: 4,
-      channel: "Twitter / X",
-      hook: `Loved your take on scaling ${targetNiche}.`,
-      body: `Hey {{FirstName}}, noticed you're building {{Company}}. We ran a crowd preference benchmark on your copy vs ${rawCompetitors[0]}—got some surprising feedback from 10 verified buyers on Terac that could double conversion.`,
-      cta: `DM me and I'll send the raw study link!`,
+      channel: "DM",
+      body: `Saw ${host}. If you're drowning in "we should do outreach" and never sending: Tack Desk is ${PRICE_LABEL} founding — 90% off ${LIST_LABEL}. URL in, report out. Agents do the research. Humans on Terac rate the copy.`,
+      cta: "Drop the URL.",
     },
     {
       id: 5,
-      channel: "Cold Email",
-      subject: `10 high-intent customer angles for {{Company}}`,
-      hook: `We mapped out where your highest-converting pipeline is hiding.`,
-      body: `Hey {{FirstName}},\n\nInstead of broad cold outbound, we identified 3 micro-segments in ${targetNiche} that convert 3x higher when messaged around speed rather than cost.\n\nAttached the full persona breakdown tailored for {{Company}}.`,
-      cta: `Let me know if this resonates!`,
+      channel: "Email",
+      subject: `Who ${brand} should talk to first`,
+      body: `Primary buyer we used: ${primaryBuyer}.\n\nThat's who the 10 lines are written for. If that's wrong, reply with one sentence and we regenerate.`,
+      cta: "Correct the buyer in one sentence.",
     },
     {
       id: 6,
-      channel: "LinkedIn DM",
-      hook: `Congrats on the momentum at {{Company}}!`,
-      body: `Hey {{FirstName}}, quick question—are you tracking how ${rawCompetitors[1] || "your rivals"} are adjusting their landing page copy this month? We caught a major gap in their onboarding that {{Company}} can easily capitalize on.`,
-      cta: `Can send over the 1-pager if you want to see.`,
+      channel: "In person",
+      body: `Don't ask "would you use an AI marketing tool." Ask: "Want 10 emails for ${brand} in three minutes at ${PRICE_LABEL} founding?"`,
+      cta: "Hand them the QR.",
     },
     {
       id: 7,
-      channel: "Cold Email",
-      subject: `cutting customer acquisition latency in half`,
-      hook: `Speed is the biggest differentiator in ${targetNiche} right now.`,
-      body: `Hey {{FirstName}},\n\nBuyers are deciding in under 3 minutes. If your competitor is taking 48 hours to onboard, that's where you win.\n\n${brand} enables instant autonomous delivery that turns cold traffic into active accounts on day 1.`,
-      cta: `Free for a 5-min walk-through on Thursday?`,
+      channel: "Email",
+      subject: `Terac will pick the line — we won't guess`,
+      body: `Two drafts for ${brand}:\nA) Generic category claim.\nB) Specific: URL in, campaign out, humans rate it.\n\nUntil the study returns, send B. After it returns, we keep the winner and log before vs after.`,
+      cta: "We'll show you the preference delta when it's real.",
     },
     {
       id: 8,
-      channel: "Twitter / X",
-      hook: `Quick growth question for {{Company}}:`,
-      body: `Hey {{FirstName}}! Saw your launch recently. If you're looking for warm outreach angles tested against live crowd raters, we put together a 5-pillar breakdown for you.`,
-      cta: `Check out the preview here: ${cleanUrl}`,
+      channel: "DM",
+      body: `If ${names[1] ?? names[0]} is the comparison everyone makes, don't argue features. Send the report. The artifact is the demo.`,
+      cta: "Forward the sprint link.",
     },
     {
       id: 9,
-      channel: "Cold Email",
-      subject: `the 3 competitor blindspots you can win today`,
-      hook: `Incumbents are too slow to adapt to autonomous workflows.`,
-      body: `Hey {{FirstName}},\n\nWe audited the top 3 players in your space. Their users complain most about complex configuration and lack of speed.\n\n${brand} was architected from the ground up to solve both.`,
-      cta: `Can I share the benchmark data?`,
+      channel: "Email",
+      subject: `One next move for ${brand}`,
+      body: `Don't build a dashboard. Send plays 1–3 to people you can tap today. Record who paid. That's the company.`,
+      cta: "Start with the person in the room.",
     },
     {
       id: 10,
-      channel: "LinkedIn DM",
-      hook: `Quick growth note for {{FirstName}}:`,
-      body: `Hey {{FirstName}}, we just ran an AI intelligence sweep for {{Company}}. The data shows your highest LTV buyers are ${targetAudience.slice(0, 35)}. We drafted 5 ready-to-send outbound scripts tailored for them.`,
-      cta: `Want me to send them over?`,
+      channel: "Email",
+      subject: `${brand} — request → pay → deliver`,
+      body: `This is the loop we have to prove: you request, you pay on Stripe, agents deliver, Terac changes the copy, we keep the evidence.\n\n${host} is the input. The report is the output. Nothing in between is a human employee.`,
+      cta: `Pay ${PRICE_LABEL} founding so the run is real.`,
     },
   ];
 
-  const teracEvidence: TeracEvidence = {
-    question: "Which of these two growth angles is more compelling and actionable for a B2B buyer?",
-    variantA: "Focus on cost-cutting and replacing routine internal employee hours.",
-    variantB: "Focus on speed-to-market, out-innovating competitors, and zero engineering debt.",
-    winner: "Variant B",
-    preferenceDelta: "+38% Higher Conversion Intent",
-    sampleSize: 10,
-    keyFinding:
-      "Human raters overwhelmingly preferred the speed and competitive advantage angle over cost reduction. All outreach plays have been adjusted to emphasize velocity.",
-  };
+  const variantA = `${brand}: AI-powered ${niche} platform.`;
+  const variantB = `Give ${host} to Tack. Agents research ${niche}, write outreach for ${primaryBuyer}, and Terac picks the line that lands.`;
 
   return {
-    orderId,
+    orderId: order.orderId,
     companyName: brand,
-    url: cleanUrl,
-    niche: targetNiche,
-    stage: "High-Growth / Scale",
-    generatedAt: new Date().toLocaleDateString("en-US", {
+    url: host,
+    niche,
+    audience,
+    generatedAt: new Date().toLocaleString("en-US", {
       month: "short",
       day: "numeric",
-      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
     }),
-    latencySeconds: 164,
-    executiveSummary: {
-      coreOffering: `${brand} delivers high-velocity infrastructure and intelligence in ${targetNiche}.`,
-      targetMarket: targetAudience,
-      positioningMoat: `Autonomous execution with sub-3 minute delivery, outmaneuvering legacy incumbent friction.`,
-      recommendedMotion: `Deploy velocity-first cold email and LinkedIn sequences targeted at dissatisfied users of ${rawCompetitors[0]}.`,
-    },
+    summary: `${brand} (${host}) — ${niche}. Built for ${audience}. This pack is Tack Desk at founding ${PRICE_LABEL} (list ${LIST_LABEL}): competitors, who to talk to, 10 sendable lines, and two headlines queued for Terac. Preference numbers appear only after a real study completes.`,
     competitors,
     personas,
     outreachPlays,
-    teracEvidence,
-    nextMoveRecommendation: {
-      title: "The 7-Day Founder Wedge Playbook",
-      timeframe: "Next 7 Days",
-      actionSteps: [
-        `Deploy Outreach Play #1 and #3 to 50 target accounts currently using ${rawCompetitors[0]}.`,
-        `Update hero headline copy to match the winning Terac crowd variant (Velocity & Moat).`,
-        `Offer a 3-minute live interactive scan to turn cold outbound replies into immediate booked calls.`,
+    terac: {
+      question: `Which line would make you more likely to try ${brand} / reply to ${host}?`,
+      cohort: "General population (Terac default)",
+      variantA,
+      variantB,
+      status: "queued",
+    },
+    nextMove: {
+      title: "Send three. Collect one payment. Log the rest.",
+      why: "The company is not a dashboard. It is request → Stripe → agents → Terac → this report. The next move is to use the report, not expand it.",
+      steps: [
+        `Walk to someone with a URL. Use play #1. Take ${PRICE_LABEL} founding on the Payment Link.`,
+        `Send plays #2 and #3 to two people you already know. Do not wait for Terac to finish.`,
+        `When Terac returns, keep the winning headline, record before vs after, and attach it to this order. Until then, variant B is the working line — labeled as a draft, not a completed study.`,
       ],
-      expectedImpact: "Estimated 2.4x lift in cold response rates and 40% shorter sales cycle.",
     },
   };
 }

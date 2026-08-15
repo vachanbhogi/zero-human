@@ -1,7 +1,7 @@
 export function safeNextUrl(
   value: string | null,
   origin: string,
-  fallbackPath = "/onboarding",
+  fallbackPath = "/dashboard",
 ): URL {
   const fallback = new URL(fallbackPath, origin);
   if (!value || !value.startsWith("/")) {
@@ -19,7 +19,7 @@ export function safeNextUrl(
 export function safeNextPath(
   value: string | null,
   origin: string,
-  fallbackPath = "/onboarding",
+  fallbackPath = "/dashboard",
 ): string {
   const url = safeNextUrl(value, origin, fallbackPath);
   return `${url.pathname}${url.search}${url.hash}`;

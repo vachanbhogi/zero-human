@@ -2,14 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { OrderResponse } from "@/lib/types";
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
-
-// In-memory fallback store to ensure zero downtime
-const inMemoryOrders = new Map<string, OrderResponse>();
+import { getOrder, saveOrder } from "@/lib/orders";
+import { upsertBusinessFromBrief } from "@/lib/workspace";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { url, niche, email, company, audience, competitors, focus, stage } = body;
+    const { url, niche, email, company, audience, competitors, businessId } = body;
 
     if (!url || typeof url !== "string") {
       return NextResponse.json(
@@ -18,34 +17,57 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const ownerEmail =
+      (typeof email === "string" && email.trim()) || user?.email || null;
+    const competitorList = Array.isArray(competitors)
+      ? competitors.filter((c): c is string => typeof c === "string")
+      : undefined;
+
+    let savedBusinessId: string | undefined;
+    try {
+      const business = await upsertBusinessFromBrief({
+        businessId: typeof businessId === "string" ? businessId : undefined,
+        name: typeof company === "string" ? company : "",
+        website: url,
+        niche: typeof niche === "string" ? niche : "",
+        audience: typeof audience === "string" ? audience : "",
+        competitors: competitorList,
+        ownerId: user?.id ?? null,
+        ownerEmail,
+      });
+      savedBusinessId = business.id;
+    } catch (workspaceErr) {
+      console.warn("[Workspace persist warning]:", workspaceErr);
+    }
+
     const orderId = `ord_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const newOrder: OrderResponse = {
       orderId,
       status: "pending_payment",
       createdAt: new Date().toISOString(),
       url: url.trim(),
-      niche: (niche || "B2B SaaS / Tech Startup").trim(),
-      email: (email || "anonymous@zero-human.ai").trim(),
+      niche: (niche || "").trim(),
+      email: (email || user?.email || "").trim(),
       company: typeof company === "string" ? company.trim() : undefined,
       audience: typeof audience === "string" ? audience.trim() : undefined,
-      competitors: Array.isArray(competitors)
-        ? competitors.filter((c): c is string => typeof c === "string")
-        : undefined,
-      focus: typeof focus === "string" ? focus.trim() : undefined,
-      stage: typeof stage === "string" ? stage.trim() : undefined,
+      competitors: competitorList,
+      businessId: savedBusinessId,
+      ownerId: user?.id,
     };
 
-    // Always cache in memory
-    inMemoryOrders.set(orderId, newOrder);
-
-    // Attempt Supabase database persistence
     try {
-      const cookieStore = await cookies();
-      const supabase = createClient(cookieStore);
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      await saveOrder(newOrder);
+    } catch (persistErr) {
+      console.warn("[Order persist warning]:", persistErr);
+    }
 
+    try {
       const { error: dbError } = await supabase.from("orders").insert({
         id: orderId,
         user_id: user?.id ?? null,
@@ -56,8 +78,7 @@ export async function POST(req: NextRequest) {
         company: newOrder.company ?? null,
         audience: newOrder.audience ?? null,
         competitors: newOrder.competitors ?? null,
-        focus: newOrder.focus ?? null,
-        stage: newOrder.stage ?? null,
+        business_id: savedBusinessId ?? null,
       });
 
       if (dbError) {
@@ -88,41 +109,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Missing order id" }, { status: 400 });
   }
 
-  // Check in-memory first for instant speed
-  const cached = inMemoryOrders.get(id);
-  if (cached) {
-    return NextResponse.json({ success: true, order: cached });
+  const order = await getOrder(id);
+  if (!order) {
+    return NextResponse.json({ error: "Order not found" }, { status: 404 });
   }
 
-  // Check Supabase database
-  try {
-    const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
-    const { data, error } = await supabase
-      .from("orders")
-      .select("*")
-      .eq("id", id)
-      .single();
-
-    if (data && !error) {
-      const dbOrder: OrderResponse = {
-        orderId: data.id,
-        status: data.status,
-        createdAt: data.created_at,
-        url: data.url,
-        niche: data.niche,
-        email: data.email,
-        company: data.company ?? undefined,
-        audience: data.audience ?? undefined,
-        competitors: data.competitors ?? undefined,
-        focus: data.focus ?? undefined,
-        stage: data.stage ?? undefined,
-      };
-      return NextResponse.json({ success: true, order: dbOrder });
-    }
-  } catch (err) {
-    console.warn("[Supabase Order Get Exception]:", err);
-  }
-
-  return NextResponse.json({ error: "Order not found" }, { status: 404 });
+  return NextResponse.json({ success: true, order });
 }
