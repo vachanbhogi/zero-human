@@ -68,6 +68,7 @@
 * 🚫 **NO Complex CSS Framework Setup**: Minimal clean Vanilla CSS or basic modern components.
 * 🚫 **NO Legacy Dopa Code Porting**: Treat Dopa purely as conceptual experience. Blank slate today.
 * 🚫 **NO Speculative Features**: If a task can be done manually during the test run, don't write code for it.
+* **NO fake data
 
 ---
 
