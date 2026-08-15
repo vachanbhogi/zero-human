@@ -25,26 +25,31 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const orderId =
-    typeof body === "object" && body !== null && "orderId" in body
-      ? String((body as { orderId: unknown }).orderId ?? "").trim()
+  const dispatchId =
+    typeof body === "object" && body !== null && "dispatchId" in body
+      ? String((body as { dispatchId: unknown }).dispatchId ?? "").trim()
       : "";
 
-  if (!orderId) {
-    return NextResponse.json({ error: "orderId is required" }, { status: 400 });
+  if (!dispatchId) {
+    return NextResponse.json({ error: "dispatchId is required" }, { status: 400 });
   }
 
-  // Idempotent, retry-safe: if this order is already claimed (processing,
-  // completed, or otherwise not in a claimable "paid" state), skip rather
-  // than error, so a retried trigger for the same orderId is a safe no-op.
-  const claimed = await ordersServer.claimOrderForProcessing(orderId);
-  if (!claimed) {
+  // Per CONTRACT.md v2 section 4: the FIRST action is an atomic claim of the
+  // dispatch job (queued -> claimed). No agent work happens before a
+  // successful claim. A null claim means the job doesn't exist or wasn't
+  // queued (already claimed/done/failed by an earlier delivery) — skip
+  // rather than error, so a retried drain/cron trigger for the same
+  // dispatchId is a safe no-op.
+  const claim = await ordersServer.claimDispatch(dispatchId);
+  if (!claim) {
     return NextResponse.json({ skipped: true }, { status: 200 });
   }
 
+  const { orderId } = claim;
+
   try {
-    const { reportHtml } = await runSprint(orderId, { ordersServer });
-    await ordersServer.completeOrder(orderId, reportHtml);
+    const { sprintResult } = await runSprint(orderId, { ordersServer });
+    await ordersServer.completeOrder(orderId, sprintResult);
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

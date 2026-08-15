@@ -96,6 +96,7 @@
   "nextMove": "Ship a self-serve install flow (script tag + hosted quickstart) so a PLG-motion prospect can go from signup to first chart in under 15 minutes without a sales call, and lead outbound with a direct time-to-value comparison against MetricPilot.",
   "variantUsed": "A",
   "terac": {
+    "status": "completed",
     "aScore": 63,
     "bScore": 71,
     "metric": "reply_intent_rate",

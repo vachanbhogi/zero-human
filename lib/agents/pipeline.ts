@@ -1,9 +1,15 @@
-// Pipeline orchestrator: order -> Scout -> Analyst -> Copywriter -> render -> store.
+// Pipeline orchestrator: order -> Scout -> Analyst -> Copywriter -> validate.
 //
-// Payment/webhook handling, order persistence, and final HTML rendering are
-// owned elsewhere (see file header notes below). This module wires the
+// Payment/webhook handling, dispatch claiming, order persistence, and report
+// rendering are owned elsewhere (see CONTRACT.md v2). This module wires the
 // pipeline core together and is intentionally dependency-injected so it can
 // be unit tested without hitting the network or a real Groq key.
+//
+// Per CONTRACT.md v2 section 5, the pipeline persists validated SprintResult
+// JSON, never rendered HTML — rendering happens at view time in Codex-owned
+// React components. runSprint therefore returns only { sprintResult }, and
+// validates it before returning so an invalid result can never reach
+// OrdersServer.completeOrder (see validateSprintResult below).
 
 import type { OrdersServer, SprintResult, SourceRef, CompetitorEntry } from "@/lib/pipeline-types";
 import type { OrderResponse } from "@/lib/types";
@@ -11,6 +17,7 @@ import { getSiteFacts, type SiteFacts } from "@/lib/agents/scout";
 import { runAnalyst, type AnalystOutput } from "@/lib/agents/analyst";
 import { runCopywriter, type CopywriterOutput } from "@/lib/agents/copywriter";
 import type { LlmCallFn } from "@/lib/agents/analyst";
+import { validateSprintResult } from "@/lib/agents/validate";
 
 export class PipelineError extends Error {
   constructor(message: string, cause?: unknown) {
@@ -56,109 +63,8 @@ function selectVariant(): "A" | "B" {
   return process.env.PIPELINE_VARIANT === "B" ? "B" : "A";
 }
 
-/**
- * Minimal placeholder renderer used until Codex's real renderer lands.
- *
- * TODO(render-integration): lib/report/render.ts (Codex-owned) will export a
- * `renderReport(result: SprintResult): string` with the polished report
- * template. Once that file exists, swap the call below for a feature-checked
- * dynamic import of it (e.g. `const mod = await import("@/lib/report/render")`
- * guarded by `typeof mod.renderReport === "function"`), falling back to
- * `renderFallback` only if that check fails. We can't wire the import yet:
- * the module doesn't exist, so a static or dynamic import of it today would
- * fail `tsc`/`next build` (module resolution runs at build time, not
- * request time). Keep this function's signature stable so the swap is a
- * one-line change.
- */
-export function renderFallback(result: SprintResult): string {
-  const escapeHtml = (value: string) =>
-    value
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
-
-  const competitorRows = result.competitors
-    .map(
-      (c) => `
-        <tr>
-          <td>${escapeHtml(c.name)}${c.inference ? " <em>(inferred)</em>" : ""}</td>
-          <td>${escapeHtml(c.positioning)}</td>
-          <td>${escapeHtml(c.weakness)}</td>
-        </tr>`
-    )
-    .join("");
-
-  const personaItems = result.personas
-    .map(
-      (p) => `
-        <li>
-          <strong>${escapeHtml(p.name)}</strong> — pain: ${escapeHtml(p.pain)}; trigger: ${escapeHtml(p.trigger)}
-        </li>`
-    )
-    .join("");
-
-  const outreachItems = result.outreach
-    .map(
-      (o, i) => `
-        <li>
-          <strong>${i + 1}. ${escapeHtml(o.angle)}</strong>
-          ${o.subject ? `<div><em>Subject: ${escapeHtml(o.subject)}</em></div>` : ""}
-          <p>${escapeHtml(o.body)}</p>
-        </li>`
-    )
-    .join("");
-
-  const sourceItems = result.sources
-    .map((s) => `<li><a href="${escapeHtml(s.url)}">${escapeHtml(s.url)}</a> (${escapeHtml(s.retrievedAt)})</li>`)
-    .join("");
-
-  return `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<title>Tack Sprint — ${escapeHtml(result.company)}</title>
-<style>
-  body { font-family: system-ui, sans-serif; max-width: 760px; margin: 40px auto; padding: 0 20px; color: #111; }
-  h1, h2 { color: #111; }
-  table { width: 100%; border-collapse: collapse; margin: 16px 0; }
-  th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
-  li { margin-bottom: 12px; }
-  .meta { color: #666; font-size: 0.9em; }
-</style>
-</head>
-<body>
-  <h1>Tack Sprint — ${escapeHtml(result.company)}</h1>
-  <p class="meta">Order ${escapeHtml(result.orderId)} · Generated ${escapeHtml(result.generatedAt)} · Variant ${escapeHtml(result.variantUsed)}</p>
-
-  <h2>Executive summary</h2>
-  <p>${escapeHtml(result.execSummary)}</p>
-
-  <h2>Competitor teardown</h2>
-  <table>
-    <thead><tr><th>Competitor</th><th>Positioning</th><th>Weakness</th></tr></thead>
-    <tbody>${competitorRows}</tbody>
-  </table>
-
-  <h2>Buyer personas</h2>
-  <ul>${personaItems}</ul>
-
-  <h2>Outreach angles</h2>
-  <ol>${outreachItems}</ol>
-
-  <h2>Recommended next move</h2>
-  <p>${escapeHtml(result.nextMove)}</p>
-
-  <h2>Sources</h2>
-  <ul>${sourceItems}</ul>
-</body>
-</html>`;
-}
-
 export interface RunSprintResult {
   sprintResult: SprintResult;
-  reportHtml: string;
 }
 
 export async function runSprint(orderId: string, deps: PipelineDeps): Promise<RunSprintResult> {
@@ -199,10 +105,17 @@ export async function runSprint(orderId: string, deps: PipelineDeps): Promise<Ru
     outreach: chosenVariant.outreach,
     nextMove: chosenVariant.nextMove,
     variantUsed,
+    // No completed Terac study is wired into the pipeline yet; the Terac
+    // winner will populate a { status: "completed", ... } result later.
+    terac: { status: "not_run" },
     sources: collectSources(scoutSource, analysis.competitors),
   };
 
-  const reportHtml = renderFallback(sprintResult);
+  // Refuse to hand back (and therefore persist) an invalid result —
+  // validateSprintResult throws ValidationError, which propagates to
+  // app/api/run/route.ts's catch block and triggers failOrder instead of
+  // completeOrder.
+  validateSprintResult(sprintResult);
 
-  return { sprintResult, reportHtml };
+  return { sprintResult };
 }
