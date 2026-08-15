@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { OrderResponse } from "@/lib/types";
+import { createClient } from "@/utils/supabase/server";
+import { cookies } from "next/headers";
 
-// In-memory store for 2-hour hackathon MVP speed
-const orders = new Map<string, OrderResponse>();
+// In-memory fallback store to ensure zero downtime
+const inMemoryOrders = new Map<string, OrderResponse>();
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,7 +35,37 @@ export async function POST(req: NextRequest) {
       stage: typeof stage === "string" ? stage.trim() : undefined,
     };
 
-    orders.set(orderId, newOrder);
+    // Always cache in memory
+    inMemoryOrders.set(orderId, newOrder);
+
+    // Attempt Supabase database persistence
+    try {
+      const cookieStore = await cookies();
+      const supabase = createClient(cookieStore);
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      const { error: dbError } = await supabase.from("orders").insert({
+        id: orderId,
+        user_id: user?.id ?? null,
+        status: newOrder.status,
+        url: newOrder.url,
+        niche: newOrder.niche,
+        email: newOrder.email,
+        company: newOrder.company ?? null,
+        audience: newOrder.audience ?? null,
+        competitors: newOrder.competitors ?? null,
+        focus: newOrder.focus ?? null,
+        stage: newOrder.stage ?? null,
+      });
+
+      if (dbError) {
+        console.warn("[Supabase Orders Insert Warning]:", dbError.message);
+      }
+    } catch (dbErr) {
+      console.warn("[Supabase Orders DB Exception]:", dbErr);
+    }
 
     return NextResponse.json({
       success: true,
@@ -56,10 +88,41 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Missing order id" }, { status: 400 });
   }
 
-  const order = orders.get(id);
-  if (!order) {
-    return NextResponse.json({ error: "Order not found" }, { status: 404 });
+  // Check in-memory first for instant speed
+  const cached = inMemoryOrders.get(id);
+  if (cached) {
+    return NextResponse.json({ success: true, order: cached });
   }
 
-  return NextResponse.json({ success: true, order });
+  // Check Supabase database
+  try {
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
+    const { data, error } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (data && !error) {
+      const dbOrder: OrderResponse = {
+        orderId: data.id,
+        status: data.status,
+        createdAt: data.created_at,
+        url: data.url,
+        niche: data.niche,
+        email: data.email,
+        company: data.company ?? undefined,
+        audience: data.audience ?? undefined,
+        competitors: data.competitors ?? undefined,
+        focus: data.focus ?? undefined,
+        stage: data.stage ?? undefined,
+      };
+      return NextResponse.json({ success: true, order: dbOrder });
+    }
+  } catch (err) {
+    console.warn("[Supabase Order Get Exception]:", err);
+  }
+
+  return NextResponse.json({ error: "Order not found" }, { status: 404 });
 }
