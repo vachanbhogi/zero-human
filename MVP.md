@@ -1,4 +1,37 @@
-# Zero Human: 2-Hour Hackathon MVP Execution Plan
+# Tack — Zero Human hackathon MVP
+
+> **Company:** Tack (agent-run growth desk)  
+> **Offer:** Tack Sprint — $15  
+> **Input:** website URL  
+> **Output:** competitor teardown + personas + 10 outreach angles + one next move, in ~3 minutes  
+> **Hackathon track:** Zero Human (`PROJECT.md`)
+
+> **The 2-Hour North Star:** Prove that two people can build and operate an autonomous company that gets a real person to pay real money today, delivers value automatically, and improves itself using real human feedback via Terac.
+
+---
+
+## 0. Locked identity
+
+| Field | Value |
+|---|---|
+| Company | **Tack** |
+| Offer | **Tack Sprint — $15** |
+| Customer | Hackathon founders / early-stage startups in the building |
+| Problem | Need a campaign they can send today, not a marketing SaaS |
+| Input | Website URL (optional niche / audience) |
+| Deliverable | 5-pillar competitor teardown, persona matrix, 10 outreach angles, one next-move recommendation |
+| Success measure | Terac preference rate (before vs after copy) |
+| Pitch | Give us your URL. Tack researches competitors, writes outreach, rates it with real people, and delivers the sprint in about 3 minutes. $15 today. Want us to run it on yours? |
+| Not this | Dopa, Zero Human as a product name, brain/cortical models, subscriptions |
+
+Mark: course-change stroke (a tack) + indigo origin. Visual world: Linear-dark craft copied from the prior landing, new copy and product.
+
+---
+
+## 1. Executive Summary & Core Hypothesis
+
+### Core Hypothesis Statement
+> **"We believe that hackathon founders and early-stage startups have an urgent need for a campaign they can send today. We believe Tack — an agent-run growth desk — solves it with a $15 URL-in sprint. We will know we are right when at least one real person pays and accepts the report live."**
 
 > **The 2-Hour North Star:** Prove that two people can build and operate an autonomous company that gets a real person to pay real money today, delivers value automatically, and improves itself using real human feedback via Terac.
 
