@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ScannedProfile } from "@/lib/types";
 import { discoverWithGroq } from "@/lib/groq-discovery";
+import { fetchSiteContent } from "@/lib/scout/bright-data";
 
 const BLOCKED_HOSTNAMES = new Set([
   "localhost",
@@ -81,27 +82,45 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8_000);
+    let html: string;
+    let source: "bright_data" | "direct" = "direct";
+    if (process.env.BRIGHT_DATA_API_KEY) {
+      const result = await fetchSiteContent(url.toString(), {
+        timeoutMs: 8_000,
+        maxResponseBytes: 400_000,
+      });
+      if (!result.ok) {
+        return NextResponse.json(
+          { error: "Could not scan that site through Bright Data. Enter details manually." },
+          { status: 502 },
+        );
+      }
+      html = result.value.content;
+      source = "bright_data";
+    } else {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8_000);
+      try {
+        const res = await fetch(url, {
+          signal: controller.signal,
+          redirect: "follow",
+          headers: {
+            "User-Agent": "TackBot/0.1 (+hackathon agent intake)",
+            Accept: "text/html,application/xhtml+xml",
+          },
+        });
 
-    const res = await fetch(url, {
-      signal: controller.signal,
-      redirect: "follow",
-      headers: {
-        "User-Agent": "TackBot/0.1 (+hackathon agent intake)",
-        Accept: "text/html,application/xhtml+xml",
-      },
-    });
-    clearTimeout(timeout);
-
-    if (!res.ok) {
-      return NextResponse.json(
-        { error: `Site responded ${res.status}. Enter details manually.` },
-        { status: 502 },
-      );
+        if (!res.ok) {
+          return NextResponse.json(
+            { error: `Site responded ${res.status}. Enter details manually.` },
+            { status: 502 },
+          );
+        }
+        html = (await res.text()).slice(0, 400_000);
+      } finally {
+        clearTimeout(timeout);
+      }
     }
-
-    const html = (await res.text()).slice(0, 400_000);
 
     const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
     const title = titleMatch ? decodeEntities(titleMatch[1]) : undefined;
@@ -137,6 +156,7 @@ Content Excerpt: ${cleanText}`;
     return NextResponse.json({
       success: true,
       websiteUrl: url.toString(),
+      source,
       profile,
     });
   } catch (err) {
