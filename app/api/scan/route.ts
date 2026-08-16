@@ -82,22 +82,27 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    let html: string;
+    let html: string | null = null;
     let source: "bright_data" | "direct" = "direct";
     if (process.env.BRIGHT_DATA_API_KEY) {
-      const result = await fetchSiteContent(url.toString(), {
-        timeoutMs: 8_000,
-        maxResponseBytes: 400_000,
-      });
-      if (!result.ok) {
-        return NextResponse.json(
-          { error: "Could not scan that site through Bright Data. Enter details manually." },
-          { status: 502 },
-        );
+      // Bright Data is an enhancement, not a gate: on any failure fall
+      // through to the direct fetch below rather than failing the scan.
+      try {
+        const result = await fetchSiteContent(url.toString(), {
+          timeoutMs: 8_000,
+          maxResponseBytes: 400_000,
+        });
+        if (result.ok) {
+          html = result.value.content;
+          source = "bright_data";
+        } else {
+          console.warn("[scan] Bright Data failed, falling back to direct fetch:", result.error);
+        }
+      } catch (brightErr) {
+        console.warn("[scan] Bright Data threw, falling back to direct fetch:", brightErr);
       }
-      html = result.value.content;
-      source = "bright_data";
-    } else {
+    }
+    if (html === null) {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 8_000);
       try {

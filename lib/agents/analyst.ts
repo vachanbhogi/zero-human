@@ -47,6 +47,23 @@ export type LlmCallFn = (request: GroqChatRequest) => Promise<GroqChatResponse>;
 
 /** Default LLM call: raw fetch against the Groq chat completions endpoint. */
 export async function callGroqChat(request: GroqChatRequest): Promise<GroqChatResponse> {
+  // Free-tier Groq enforces a tokens-per-minute limit; a paid customer's run
+  // must survive a 429 by waiting out the window instead of failing the order.
+  const MAX_RATE_LIMIT_RETRIES = 3;
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await callGroqChatOnce(request);
+    } catch (err) {
+      const is429 = err instanceof AnalystError && err.message.includes("responded 429");
+      if (!is429 || attempt >= MAX_RATE_LIMIT_RETRIES) throw err;
+      const waitMatch = err.message.match(/try again in ([0-9.]+)s/);
+      const waitMs = waitMatch ? Math.ceil(parseFloat(waitMatch[1]) * 1000) + 1000 : 25_000;
+      await new Promise((resolve) => setTimeout(resolve, Math.min(waitMs, 60_000)));
+    }
+  }
+}
+
+async function callGroqChatOnce(request: GroqChatRequest): Promise<GroqChatResponse> {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     throw new AnalystError("GROQ_API_KEY is not set");
