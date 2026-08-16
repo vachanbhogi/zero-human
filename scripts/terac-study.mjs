@@ -122,8 +122,9 @@ function draftParams() {
   return {
     projectId: process.env.TERAC_PROJECT_ID || DEFAULT_PROJECT_ID,
     title: "Tack growth pitch: actionable copy A/B preference",
-    variantA: SAMPLE_VARIANT_A,
-    variantB: SAMPLE_VARIANT_B,
+    variantA: process.env.VARIANT_A_TEXT || SAMPLE_VARIANT_A,
+    variantB: process.env.VARIANT_B_TEXT || SAMPLE_VARIANT_B,
+    taskUrl: process.env.TERAC_TASK_URL || undefined,
     participants: DEFAULT_PARTICIPANTS,
     businessType: "b2c",
   };
