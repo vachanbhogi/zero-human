@@ -15,7 +15,6 @@ import {
   navItemActive,
   navItemIdle,
 } from "@/lib/dashboard-ui";
-import { CTA } from "@/lib/brand";
 import { BusinessTab } from "./BusinessTab";
 import { ProductsTab } from "./ProductsTab";
 import { SettingsTab } from "./SettingsTab";
@@ -313,7 +312,7 @@ export function DashboardShell({
               }
               className="inline-flex h-8 items-center rounded-lg bg-white px-3 text-[13px] font-medium text-[#08090a] transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.97]"
             >
-              {CTA}
+              + New Sprint
             </Link>
             <form action={signOut} className="ml-1 hidden sm:inline">
               <button type="submit" className={headerLogoutButton}>

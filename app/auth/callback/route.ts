@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { safeNextPath } from "@/utils/safe-next-url";
-import { configuredSiteOrigin, normalizedOrigin } from "@/utils/site-origin";
+import { configuredSiteOrigin } from "@/utils/site-origin";
 
 async function getOrigin() {
   const configured = configuredSiteOrigin();

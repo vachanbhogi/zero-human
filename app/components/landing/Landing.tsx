@@ -1,9 +1,15 @@
 import { Header } from "./Header";
 import { Hero } from "./Hero";
-import { Competitors, Pipeline, Report, Scan, Terac } from "./Sections";
-import { FinalCta, Footer, UseCases } from "./Closing";
+import { Pipeline, Deliverables, TeracLoop } from "./Sections";
+import { Pricing, FAQ, FinalCta, Footer } from "./Closing";
 
-export function Landing() {
+export interface LandingProps {
+  userEmail?: string | null;
+  isPaid?: boolean;
+  activeBusinessName?: string | null;
+}
+
+export function Landing({ userEmail, isPaid, activeBusinessName }: LandingProps = {}) {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <a
@@ -12,15 +18,18 @@ export function Landing() {
       >
         Skip to content →
       </a>
-      <Header />
+      <Header
+        userEmail={userEmail}
+        isPaid={isPaid}
+        activeBusinessName={activeBusinessName}
+      />
       <main id="main">
         <Hero />
         <Pipeline />
-        <Scan />
-        <Competitors />
-        <Terac />
-        <Report />
-        <UseCases />
+        <Deliverables />
+        <TeracLoop />
+        <Pricing />
+        <FAQ />
         <FinalCta />
       </main>
       <Footer />
