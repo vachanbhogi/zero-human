@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+// @ts-expect-error Node's TypeScript test runner requires the source extension.
 import { ReportRenderValidationError, renderReport } from "./render.ts";
 import type { SprintResult } from "../pipeline-types";
 
