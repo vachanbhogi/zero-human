@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runSprint } from "@/lib/agents/pipeline";
-import { ordersServer } from "@/lib/orders-server";
+import { getOrdersServer } from "@/lib/orders-factory";
+
+const ordersServer = getOrdersServer();
 
 export const maxDuration = 300;
 
