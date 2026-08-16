@@ -9,7 +9,7 @@ export function SettingsTab({
     <div className="max-w-xl space-y-6">
       <p className="text-[14px] leading-6 text-secondary">
         The account this desk is saved to. Businesses, products, and sprints
-        stay with this email on this machine.
+        stay with this email.
       </p>
       <div className="zh-panel space-y-5 p-6">
         <div>

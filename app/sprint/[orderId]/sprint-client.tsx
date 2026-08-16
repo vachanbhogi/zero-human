@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { SprintReportView } from "@/app/components/SprintReportView";
+import { SprintProgressView } from "@/app/components/SprintProgressView";
 import { generateSprintReport } from "@/lib/report-generator";
 import { ORDER_STORAGE_KEY } from "@/lib/order-storage";
 import { OrderResponse } from "@/lib/types";
@@ -16,6 +17,11 @@ function isOrder(value: unknown): value is OrderResponse {
 export default function SprintClient({ orderId }: { orderId: string }) {
   const [order, setOrder] = useState<OrderResponse | null>(null);
   const [failed, setFailed] = useState(false);
+  const [showProgressTrace, setShowProgressTrace] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const params = new URLSearchParams(window.location.search);
+    return params.get("paid") === "true" || !!params.get("session_id");
+  });
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -88,6 +94,18 @@ export default function SprintClient({ orderId }: { orderId: string }) {
     };
   }, [orderId]);
 
+  if (order && showProgressTrace) {
+    return (
+      <div className="min-h-screen bg-[#08090a]">
+        <SprintProgressView
+          companyName={order.company}
+          url={order.url}
+          onComplete={() => setShowProgressTrace(false)}
+        />
+      </div>
+    );
+  }
+
   if (order) {
     return <SprintReportView report={generateSprintReport(order)} />;
   }
@@ -96,11 +114,11 @@ export default function SprintClient({ orderId }: { orderId: string }) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#08090a] px-5 text-center text-white">
         <p className="text-[15px] text-secondary">
-          That sprint isn&apos;t on this machine. Create it again from a URL.
+          We couldn&apos;t find that sprint. Start again from a URL.
         </p>
         <Link
           href="/onboarding"
-          className="mt-6 rounded-lg bg-white px-4 py-2.5 text-[14px] font-medium text-[#08090a]"
+          className="mt-6 rounded-lg bg-white px-5 py-2.5 text-[14px] font-medium text-[#08090a] transition-all hover:opacity-90 active:scale-[0.98]"
         >
           Start a sprint
         </Link>
@@ -109,8 +127,8 @@ export default function SprintClient({ orderId }: { orderId: string }) {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#08090a] text-[14px] text-secondary">
-      Loading sprint…
+    <div className="min-h-screen bg-[#08090a]">
+      <SprintProgressView url={orderId} />
     </div>
   );
 }

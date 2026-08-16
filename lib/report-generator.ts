@@ -1,5 +1,4 @@
 import { OrderResponse } from "@/lib/types";
-import { LIST_LABEL, PRICE_LABEL } from "@/lib/brand";
 
 export interface CompetitorTeardown {
   name: string;
@@ -90,33 +89,33 @@ export function generateSprintReport(order: OrderResponse): SprintReportData {
       return {
         name,
         whatTheyLeadWith: "Broad platform language. Sounds big, sells slowly.",
-        gapYouCanOwn: `${brand} wins by being specific: one URL in, a campaign out today.`,
+        gapYouCanOwn: `${brand} can be specific for ${primaryBuyer}: one clear outcome, not a category claim.`,
       };
     }
     if (i === 1) {
       return {
         name,
         whatTheyLeadWith: "Feature list and 'AI-powered' with no proof of a sendable artifact.",
-        gapYouCanOwn: `Lead with the artifact — teardown, 10 lines, one next move — not the model.`,
+        gapYouCanOwn: `Lead with something ${primaryBuyer} can use this week — not the roadmap.`,
       };
     }
     return {
       name,
-      whatTheyLeadWith: "Manual research they never finish during a hackathon.",
-      gapYouCanOwn: `${brand} is the desk that actually runs while they pitch.`,
+      whatTheyLeadWith: "Manual research they start and never finish.",
+      gapYouCanOwn: `${brand} can be the option that actually ships the first send.`,
     };
   });
 
   const personas: CustomerPersona[] = [
     {
       who: primaryBuyer,
-      whyTheyCare: `They need something they can send tonight for ${niche}, not a login to a marketing suite.`,
-      firstMessage: `Paste ${host}. Get the teardown and 10 lines. Pay ${PRICE_LABEL} founding if the first three are usable.`,
+      whyTheyCare: `They need a first send for ${niche} tonight, not another tool to log into.`,
+      firstMessage: `Looked at ${host}. For ${primaryBuyer}, the open that works is the specific outcome — not the category. Want the three lines we drafted?`,
     },
     {
-      who: "Someone standing next to them with a live URL",
-      whyTheyCare: "Impulse buy. They can evaluate the product by reading the report, not a pitch deck.",
-      firstMessage: `Want us to run Tack on yours? URL, ${PRICE_LABEL} founding (${LIST_LABEL} list), ~3 minutes.`,
+      who: `Someone who already compared you to ${names[0]}`,
+      whyTheyCare: `They need a reason ${brand} is not just another ${niche} option.`,
+      firstMessage: `${names[0]} is the comparison. Don't argue features — send the teardown of ${host}.`,
     },
   ];
 
@@ -124,73 +123,73 @@ export function generateSprintReport(order: OrderResponse): SprintReportData {
     {
       id: 1,
       channel: "In person",
-      body: `We're an agent-run growth desk. Give me ${host} — we map competitors, write 10 outreach lines, and have real people on Terac pick the stronger angle. ${LIST_LABEL} list. ${PRICE_LABEL} founding if you pay on this call. Want us to run it on yours?`,
-      cta: "Open the Payment Link on the phone.",
+      body: `${brand} is for ${primaryBuyer} in ${niche}. The difference vs ${names[0]} is a first campaign you can send today, not a longer feature list. I can walk ${host} in two minutes.`,
+      cta: "Ask if they want the first three lines.",
     },
     {
       id: 2,
       channel: "Email",
-      subject: `3-minute teardown of ${host}`,
-      body: `Hey — we ran ${brand} (${host}) through Tack. Scout pulled the live site, we drafted competitor gaps in ${niche}, and queued two headline variants for a Terac preference study (general population).\n\nIf the first three lines below are wrong, tell us. If they're right, you can send them tonight.`,
-      cta: "Reply with the URL you actually want us to run.",
+      subject: `${host} — one gap vs ${names[0]}`,
+      body: `Hey — looked at how ${primaryBuyer} evaluates ${niche}. ${names[0]} leads with platform. ${brand} can lead with a finished first send.\n\nIf that's the wrong buyer, reply in one sentence and I'll rewrite.`,
+      cta: "Send to two people you already know.",
     },
     {
       id: 3,
       channel: "Email",
       subject: `${names[0]} vs ${brand} — the gap`,
-      body: `Quick note: ${names[0]} leads with platform. ${brand} can lead with a finished campaign. That's the wedge for ${primaryBuyer}.\n\nWe wrote 10 lines from that angle. Want the pack?`,
+      body: `Quick note: ${names[0]} sounds big and sells slowly. ${brand} can show ${primaryBuyer} a campaign from ${host} instead of a feature list.\n\nThree lines are ready if you want them tonight.`,
       cta: "Yes — send the 10.",
     },
     {
       id: 4,
       channel: "DM",
-      body: `Saw ${host}. If you're drowning in "we should do outreach" and never sending: Tack Desk is ${PRICE_LABEL} founding — 90% off ${LIST_LABEL}. URL in, report out. Agents do the research. Humans on Terac rate the copy.`,
-      cta: "Drop the URL.",
+      body: `Saw ${host}. If outreach keeps slipping: here are 10 lines written for ${primaryBuyer}. Send the first three as-is and see who replies.`,
+      cta: "Offer to send play #1.",
     },
     {
       id: 5,
       channel: "Email",
       subject: `Who ${brand} should talk to first`,
-      body: `Primary buyer we used: ${primaryBuyer}.\n\nThat's who the 10 lines are written for. If that's wrong, reply with one sentence and we regenerate.`,
+      body: `Primary buyer we used: ${primaryBuyer}.\n\nThat's who the 10 lines are written for. If that's wrong, reply with one sentence.`,
       cta: "Correct the buyer in one sentence.",
     },
     {
       id: 6,
       channel: "In person",
-      body: `Don't ask "would you use an AI marketing tool." Ask: "Want 10 emails for ${brand} in three minutes at ${PRICE_LABEL} founding?"`,
-      cta: "Hand them the QR.",
+      body: `Don't ask if they need another ${niche} tool. Ask: "Want 10 emails for ${brand} you can send tonight?"`,
+      cta: "Show them play #1 on the phone.",
     },
     {
       id: 7,
       channel: "Email",
-      subject: `Terac will pick the line — we won't guess`,
-      body: `Two drafts for ${brand}:\nA) Generic category claim.\nB) Specific: URL in, campaign out, humans rate it.\n\nUntil the study returns, send B. After it returns, we keep the winner and log before vs after.`,
-      cta: "We'll show you the preference delta when it's real.",
+      subject: `Two headlines for ${brand} — pick one`,
+      body: `Two drafts for ${brand}:\nA) Generic category claim.\nB) Specific: what ${primaryBuyer} gets from ${host}.\n\nUntil a preference test returns, send B.`,
+      cta: "Use variant B this week.",
     },
     {
       id: 8,
       channel: "DM",
-      body: `If ${names[1] ?? names[0]} is the comparison everyone makes, don't argue features. Send the report. The artifact is the demo.`,
-      cta: "Forward the sprint link.",
+      body: `If ${names[1] ?? names[0]} is the comparison everyone makes, don't argue features. Forward the teardown.`,
+      cta: "Send the competitor section.",
     },
     {
       id: 9,
       channel: "Email",
       subject: `One next move for ${brand}`,
-      body: `Don't build a dashboard. Send plays 1–3 to people you can tap today. Record who paid. That's the company.`,
-      cta: "Start with the person in the room.",
+      body: `Don't wait for a bigger campaign. Send plays 1–3 to people you can reach today. That's the test.`,
+      cta: "Start with someone you can tap today.",
     },
     {
       id: 10,
       channel: "Email",
-      subject: `${brand} — request → pay → deliver`,
-      body: `This is the loop we have to prove: you request, you pay on Stripe, agents deliver, Terac changes the copy, we keep the evidence.\n\n${host} is the input. The report is the output. Nothing in between is a human employee.`,
-      cta: `Pay ${PRICE_LABEL} founding so the run is real.`,
+      subject: `${brand} — send three, learn one thing`,
+      body: `${host} is the input. These 10 lines are the output. Send three, note who replies, and we'll tighten the brief from that.`,
+      cta: "Send plays 1–3 tonight.",
     },
   ];
 
   const variantA = `${brand}: AI-powered ${niche} platform.`;
-  const variantB = `Give ${host} to Tack. Agents research ${niche}, write outreach for ${primaryBuyer}, and Terac picks the line that lands.`;
+  const variantB = `${brand} gives ${primaryBuyer} a first campaign from ${host} — not another ${niche} login.`;
 
   return {
     orderId: order.orderId,
@@ -204,7 +203,7 @@ export function generateSprintReport(order: OrderResponse): SprintReportData {
       hour: "numeric",
       minute: "2-digit",
     }),
-    summary: `${brand} (${host}) — ${niche}. Built for ${audience}. This pack is Tack Desk at founding ${PRICE_LABEL} (list ${LIST_LABEL}): competitors, who to talk to, 10 sendable lines, and two headlines queued for Terac. Preference numbers appear only after a real study completes.`,
+    summary: `${brand} (${host}) — ${niche}. Built for ${audience}. This pack: competitor gaps, who to talk to, 10 sendable lines, and two headlines queued for a preference test. Preference numbers appear only after a real study completes.`,
     competitors,
     personas,
     outreachPlays,
@@ -216,12 +215,12 @@ export function generateSprintReport(order: OrderResponse): SprintReportData {
       status: "queued",
     },
     nextMove: {
-      title: "Send three. Collect one payment. Log the rest.",
-      why: "The company is not a dashboard. It is request → Stripe → agents → Terac → this report. The next move is to use the report, not expand it.",
+      title: "Send three lines tonight.",
+      why: `The pack is useful when ${primaryBuyer} sees it. Plays 1–3 are written to send as-is.`,
       steps: [
-        `Walk to someone with a URL. Use play #1. Take ${PRICE_LABEL} founding on the Payment Link.`,
-        `Send plays #2 and #3 to two people you already know. Do not wait for Terac to finish.`,
-        `When Terac returns, keep the winning headline, record before vs after, and attach it to this order. Until then, variant B is the working line — labeled as a draft, not a completed study.`,
+        "Send play #1 to someone you can reach today.",
+        "Send plays #2 and #3 to two people already in your pipeline.",
+        "If the buyer is wrong, edit the brief and run again. Until a preference test returns, variant B is the working headline — a draft, not a completed study.",
       ],
     },
   };

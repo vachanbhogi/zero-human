@@ -11,9 +11,13 @@ import { isUserPaid } from "@/lib/subscription";
 export default async function OnboardingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ businessId?: string; new?: string }>;
+  searchParams: Promise<{
+    businessId?: string;
+    new?: string;
+    notice?: string;
+  }>;
 }) {
-  const { businessId, new: startNew } = await searchParams;
+  const { businessId, new: startNew, notice } = await searchParams;
   const supabase = createClient(await cookies());
   const {
     data: { user },
@@ -45,6 +49,10 @@ export default async function OnboardingPage({
   }
 
   return (
-    <OnboardingFlow initialBrief={initialBrief} businessId={businessId} />
+    <OnboardingFlow
+      initialBrief={initialBrief}
+      businessId={businessId}
+      membershipRequired={notice === "membership_required"}
+    />
   );
 }
