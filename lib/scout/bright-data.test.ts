@@ -20,23 +20,29 @@ function restoreCredentials(): void {
 
 test.after(restoreCredentials);
 
-test("rejects non-HTTPS targets before making a request", async () => {
+test("rejects non-HTTPS, local, and private targets before making a request", async () => {
   setCredentials();
   let called = false;
-  const result = await fetchSiteContent("http://example.com", {
-    fetch: async () => {
-      called = true;
-      return new Response();
-    },
-  });
-
-  assert.deepEqual(result, {
-    ok: false,
-    error: {
-      code: "invalid_url",
-      message: "Target URL must be an absolute HTTPS URL without credentials.",
-    },
-  });
+  const fetch = async () => {
+    called = true;
+    return new Response();
+  };
+  for (const target of [
+    "http://example.com",
+    "https://localhost",
+    "https://api.localhost",
+    "https://app.local",
+    "https://127.0.0.1",
+    "https://10.0.0.1",
+    "https://192.168.1.1",
+    "https://[::1]",
+    "https://[fd00::1]",
+    "https://[fe80::1]",
+  ]) {
+    const result = await fetchSiteContent(target, { fetch });
+    assert.equal(result.ok, false);
+    if (!result.ok) assert.equal(result.error.code, "invalid_url");
+  }
   assert.equal(called, false);
 });
 
@@ -76,6 +82,20 @@ test("uses Bright Data's raw request shape and default tack zone", async () => {
   if (result.ok) assert.equal(result.value.content, "<main>Example</main>");
 });
 
+test("rejects an invalid Bright Data zone before making a request", async () => {
+  setCredentials();
+  process.env.BRIGHT_DATA_ZONE = "invalid zone";
+  const result = await fetchSiteContent("https://example.com", {
+    fetch: async () => {
+      throw new Error("must not fetch");
+    },
+  });
+
+  assert.equal(result.ok, false);
+  if (!result.ok) assert.equal(result.error.code, "invalid_zone");
+  delete process.env.BRIGHT_DATA_ZONE;
+});
+
 test("extracts text content from Bright Data's JSON response envelope", async () => {
   setCredentials();
   const result = await fetchSiteContent("https://example.com", {
@@ -111,4 +131,26 @@ test("rejects binary and oversized responses", async () => {
   assert.equal(oversized.ok, false);
   if (!binary.ok) assert.equal(binary.error.code, "non_text_response");
   if (!oversized.ok) assert.equal(oversized.error.code, "response_too_large");
+});
+
+test("times out and cancels a stalled response body", async () => {
+  setCredentials();
+  let cancelled = false;
+  const result = await fetchSiteContent("https://example.com", {
+    timeoutMs: 10,
+    fetch: async () =>
+      new Response(
+        new ReadableStream({
+          pull: () => new Promise<void>(() => undefined),
+          cancel: () => {
+            cancelled = true;
+          },
+        }),
+        { headers: { "content-type": "text/html" } }
+      ),
+  });
+
+  assert.equal(result.ok, false);
+  if (!result.ok) assert.equal(result.error.code, "request_timeout");
+  assert.equal(cancelled, true);
 });

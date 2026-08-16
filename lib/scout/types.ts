@@ -1,5 +1,6 @@
 export type BrightDataFailureCode =
   | "invalid_url"
+  | "invalid_zone"
   | "missing_api_key"
   | "request_timeout"
   | "network_error"
