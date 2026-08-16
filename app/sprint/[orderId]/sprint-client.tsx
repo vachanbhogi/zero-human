@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { SprintReportView } from "@/app/components/SprintReportView";
+import { SprintProgressView } from "@/app/components/SprintProgressView";
 import { generateSprintReport } from "@/lib/report-generator";
 import { ORDER_STORAGE_KEY } from "@/lib/order-storage";
 import { OrderResponse } from "@/lib/types";
@@ -139,27 +140,24 @@ export default function SprintClient({ orderId }: { orderId: string }) {
   }, [orderId]);
 
   if (generating || (order && PAID_STATUSES.has(order.status) && order.orderId !== "ord_demo")) {
+    if (generateError) {
+      return (
+        <div className="flex min-h-screen flex-col items-center justify-center bg-[#08090a] px-5 text-center text-white">
+          <p className="text-[15px] text-red-400">{generateError}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-6 rounded-lg bg-white px-4 py-2.5 text-[14px] font-medium text-[#08090a]"
+          >
+            Retry
+          </button>
+        </div>
+      );
+    }
+    // Live progress trace while the real pipeline runs; the generate loop
+    // redirects to /report/<token> the moment the result is persisted.
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-[#08090a] px-5 text-center text-white">
-        {generateError ? (
-          <>
-            <p className="text-[15px] text-red-400">{generateError}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-6 rounded-lg bg-white px-4 py-2.5 text-[14px] font-medium text-[#08090a]"
-            >
-              Retry
-            </button>
-          </>
-        ) : (
-          <>
-            <p className="text-[15px] text-white">Your agents are working…</p>
-            <p className="mt-2 text-[13px] text-secondary">
-              Scout, Analyst, and Copywriter are building your report. This takes about 2 minutes.
-              You&apos;ll be redirected automatically.
-            </p>
-          </>
-        )}
+      <div className="min-h-screen bg-[#08090a]">
+        <SprintProgressView companyName={order?.company} url={order?.url ?? orderId} />
       </div>
     );
   }
@@ -172,11 +170,11 @@ export default function SprintClient({ orderId }: { orderId: string }) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#08090a] px-5 text-center text-white">
         <p className="text-[15px] text-secondary">
-          That sprint isn&apos;t on this machine. Create it again from a URL.
+          We couldn&apos;t find that sprint. Start again from a URL.
         </p>
         <Link
           href="/onboarding"
-          className="mt-6 rounded-lg bg-white px-4 py-2.5 text-[14px] font-medium text-[#08090a]"
+          className="mt-6 rounded-lg bg-white px-5 py-2.5 text-[14px] font-medium text-[#08090a] transition-all hover:opacity-90 active:scale-[0.98]"
         >
           Start a sprint
         </Link>
@@ -185,8 +183,8 @@ export default function SprintClient({ orderId }: { orderId: string }) {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#08090a] text-[14px] text-secondary">
-      Loading sprint…
+    <div className="min-h-screen bg-[#08090a]">
+      <SprintProgressView url={orderId} />
     </div>
   );
 }

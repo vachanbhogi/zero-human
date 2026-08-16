@@ -80,14 +80,16 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Fallback to hosted Stripe Payment Link
     if (paymentLink) {
       return NextResponse.json({ success: true, url: paymentLink });
     }
 
     // No payment rail available: fail closed rather than handing out the
     // deliverable for free.
-    return NextResponse.json({ error: "Payments are not configured" }, { status: 503 });
+    return NextResponse.json(
+      { error: "Checkout isn’t available right now. Try again in a moment." },
+      { status: 503 },
+    );
   } catch (err) {
     console.error("[Checkout Route Error]:", err);
     return NextResponse.json(

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { BRAND, DELIVERABLE, DISCOUNT, LIST_LABEL, OFFER_NAME, PRICE_LABEL } from "@/lib/brand";
 import { createClient } from "@/utils/supabase/client";
 import { ORDER_STORAGE_KEY } from "@/lib/order-storage";
@@ -23,38 +24,49 @@ const easeOut = [0.23, 1, 0.32, 1] as const;
 export function OnboardingFlow({
   initialBrief,
   businessId,
+  membershipRequired = false,
 }: {
   initialBrief?: AgentBrief;
   businessId?: string;
+  membershipRequired?: boolean;
 } = {}) {
+  const router = useRouter();
   const reduceMotion = useReducedMotion();
   const seeded = Boolean(initialBrief?.url && initialBrief.company);
-  const [step, setStep] = useState<Step>(seeded ? "review" : "import");
-  const [brief, setBrief] = useState<AgentBrief>(initialBrief ?? emptyAgentBrief());
+
+  const [step, setStep] = useState<Step>(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("step") === "launch") return "launch";
+    }
+    return seeded ? "review" : "import";
+  });
+
+  const [brief, setBrief] = useState<AgentBrief>(() => {
+    const base = initialBrief ?? emptyAgentBrief();
+    if (typeof window !== "undefined") {
+      try {
+        const saved = sessionStorage.getItem("tack_brief_draft");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed === "object") {
+            return { ...base, ...parsed };
+          }
+        }
+      } catch {}
+    }
+    return base;
+  });
+
   const [scanning, setScanning] = useState(false);
-  const [scanned, setScanned] = useState(seeded);
+  const [scanned, setScanned] = useState(() => seeded);
+
   const [submitting, setSubmitting] = useState(false);
   const [order, setOrder] = useState<OrderResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [authenticatedUser, setAuthenticatedUser] = useState<string | null>(null);
 
   useEffect(() => {
-    try {
-      const saved = sessionStorage.getItem("tack_brief_draft");
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && typeof parsed === "object") {
-          setBrief((prev) => ({ ...prev, ...parsed }));
-          if (parsed.url) setScanned(true);
-        }
-      }
-    } catch {}
-
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get("step") === "launch") {
-      setStep("launch");
-    }
-
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user?.email) {
@@ -278,7 +290,7 @@ export function OnboardingFlow({
                   <div className="mt-10 flex items-center justify-center gap-5 text-[12px] text-tertiary">
                     <span>{PRICE_LABEL} founding</span>
                     <span className="h-3 w-px bg-white/10" aria-hidden />
-                    <span>~3 min delivery</span>
+                    <span>Confirm, then pay</span>
                     <span className="h-3 w-px bg-white/10" aria-hidden />
                     <span>Terac-rated</span>
                   </div>
@@ -378,7 +390,9 @@ export function OnboardingFlow({
                           }
                           setError(null);
                           if (!authenticatedUser) {
-                            window.location.href = "/?modal=signup&redirectTo=/onboarding?step=launch";
+                            router.push(
+                              `/?modal=signup&redirectTo=${encodeURIComponent("/onboarding?step=launch")}`,
+                            );
                             return;
                           }
                           setStep("launch");
@@ -405,6 +419,14 @@ export function OnboardingFlow({
                       {PRICE_LABEL} founding for {brief.company.trim() || brief.url.trim() || "this URL"}.
                       List {LIST_LABEL}. {DISCOUNT} if you start today.
                     </p>
+                    {membershipRequired ? (
+                      <p
+                        className="mx-auto mt-5 max-w-md rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-[13px] leading-5 text-amber-200"
+                        role="status"
+                      >
+                        Pay the founding rate to open the desk. Your brief is still here.
+                      </p>
+                    ) : null}
                   </div>
 
                   <div className="zh-panel mt-10 p-6 text-left sm:p-8">
@@ -435,7 +457,7 @@ export function OnboardingFlow({
                         </span>
                       </div>
                       <p className="mt-2 text-[11px] leading-4 text-tertiary">
-                        Stripe checkout next. Desk stays locked until payment is verified in Supabase.
+                        Checkout next. The desk opens after payment clears.
                       </p>
                       
                       <div className="mt-3 pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs">
@@ -444,7 +466,7 @@ export function OnboardingFlow({
                           <span className="text-emerald-400 font-medium">✓ Logged in as {authenticatedUser}</span>
                         ) : (
                           <Link
-                            href="/?modal=signup&redirectTo=/onboarding"
+                            href={`/?modal=signup&redirectTo=${encodeURIComponent("/onboarding?step=launch")}`}
                             className="text-white underline hover:text-emerald-400 font-medium"
                           >
                             Sign up / Log in to link desk →
@@ -537,26 +559,9 @@ function OrderReceipt({
           >
             Pay {PRICE_LABEL} founding
           </PayCta>
-          <Link
-            href={`/sprint/${order.orderId}`}
-            className="inline-flex w-full items-center justify-center rounded-xl border border-white/12 bg-white/4 px-5 py-3 text-[14px] text-white transition-colors hover:bg-white/8"
-          >
-            View the pack
-          </Link>
-          <Link
-            href="/dashboard?tab=sprints"
-            className="inline-flex w-full items-center justify-center text-[13px] text-secondary hover:text-white"
-          >
-            Open desk
-          </Link>
-          <div className="rounded-lg border border-brand/25 bg-brand/[0.07] p-3 text-center">
-            <p className="text-[12px] font-medium text-white">
-              Next: pay {PRICE_LABEL} founding, then open the desk
-            </p>
-            <p className="mt-1 text-[11px] leading-4 text-tertiary">
-              Unpaid orders stay unpaid. Don&apos;t treat this receipt as revenue.
-            </p>
-          </div>
+          <p className="text-center text-[12px] leading-5 text-tertiary">
+            Pay {PRICE_LABEL} founding to release the pack and open the desk.
+          </p>
         </div>
       </div>
 
