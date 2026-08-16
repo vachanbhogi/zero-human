@@ -39,18 +39,41 @@ export function OnboardingFlow({
   const [authenticatedUser, setAuthenticatedUser] = useState<string | null>(null);
 
   useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem("tack_brief_draft");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === "object") {
+          setBrief((prev) => ({ ...prev, ...parsed }));
+          if (parsed.url) setScanned(true);
+        }
+      }
+    } catch {}
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("step") === "launch") {
+      setStep("launch");
+    }
+
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user?.email) {
         setAuthenticatedUser(user.email);
         setBrief((prev) => ({
           ...prev,
-          email: prev.email || user.email || "",
-          company: prev.company || (user.user_metadata?.full_name as string) || "",
+          email: user.email || prev.email,
         }));
       }
     });
   }, []);
+
+  useEffect(() => {
+    try {
+      if (brief.url || brief.company) {
+        sessionStorage.setItem("tack_brief_draft", JSON.stringify(brief));
+      }
+    } catch {}
+  }, [brief]);
 
   const stepIndex = STEPS.indexOf(step);
 
@@ -354,6 +377,10 @@ export function OnboardingFlow({
                             return;
                           }
                           setError(null);
+                          if (!authenticatedUser) {
+                            window.location.href = "/?modal=signup&redirectTo=/onboarding?step=launch";
+                            return;
+                          }
                           setStep("launch");
                         }}
                         className="inline-flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-[13px] font-medium text-white transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.97]"

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Landing } from "./components/landing/Landing";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { createClient } from "@/utils/supabase/server";
+import { isUserPaid } from "@/lib/subscription";
 
 export default async function Home({
   searchParams,
@@ -22,7 +23,9 @@ export default async function Home({
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (user && !modal) {
+  const paid = user ? await isUserPaid(user.id, user) : false;
+
+  if (user && paid && !modal) {
     redirect("/dashboard");
   }
 
