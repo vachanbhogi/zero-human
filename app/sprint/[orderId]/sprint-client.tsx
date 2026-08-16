@@ -18,10 +18,37 @@ export default function SprintClient({ orderId }: { orderId: string }) {
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const sessionId = params.get("session_id");
+      if (sessionId) {
+        fetch(`/api/stripe/verify?session_id=${encodeURIComponent(sessionId)}`).catch(console.warn);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     if (!orderId) return;
     let cancelled = false;
 
     async function load() {
+      if (orderId === "demo" || orderId === "ord_demo") {
+        if (!cancelled) {
+          setOrder({
+            orderId: "ord_demo",
+            status: "paid",
+            createdAt: new Date().toISOString(),
+            url: "https://tack.zero-human.ai",
+            niche: "Autonomous Growth Desks",
+            email: "founder@tack.ai",
+            company: "Tack",
+            audience: "High-growth startups, founders, and demand gen operators",
+            competitors: ["Clay", "Apollo.io", "Lavender"],
+          });
+        }
+        return;
+      }
+
       try {
         const stored = sessionStorage.getItem(`${ORDER_STORAGE_KEY}:${orderId}`);
         if (stored) {

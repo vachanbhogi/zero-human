@@ -39,18 +39,41 @@ export function OnboardingFlow({
   const [authenticatedUser, setAuthenticatedUser] = useState<string | null>(null);
 
   useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem("tack_brief_draft");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === "object") {
+          setBrief((prev) => ({ ...prev, ...parsed }));
+          if (parsed.url) setScanned(true);
+        }
+      }
+    } catch {}
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("step") === "launch") {
+      setStep("launch");
+    }
+
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user?.email) {
         setAuthenticatedUser(user.email);
         setBrief((prev) => ({
           ...prev,
-          email: prev.email || user.email || "",
-          company: prev.company || (user.user_metadata?.full_name as string) || "",
+          email: user.email || prev.email,
         }));
       }
     });
   }, []);
+
+  useEffect(() => {
+    try {
+      if (brief.url || brief.company) {
+        sessionStorage.setItem("tack_brief_draft", JSON.stringify(brief));
+      }
+    } catch {}
+  }, [brief]);
 
   const stepIndex = STEPS.indexOf(step);
 
@@ -354,6 +377,10 @@ export function OnboardingFlow({
                             return;
                           }
                           setError(null);
+                          if (!authenticatedUser) {
+                            window.location.href = "/?modal=signup&redirectTo=/onboarding?step=launch";
+                            return;
+                          }
                           setStep("launch");
                         }}
                         className="inline-flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-[13px] font-medium text-white transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.97]"
@@ -408,9 +435,22 @@ export function OnboardingFlow({
                         </span>
                       </div>
                       <p className="mt-2 text-[11px] leading-4 text-tertiary">
-                        Stripe Payment Link next. Agents stay idle until payment is real.
-                        Terac preference numbers only after a live study — drafts stay labeled.
+                        Stripe checkout next. Desk stays locked until payment is verified in Supabase.
                       </p>
+                      
+                      <div className="mt-3 pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs">
+                        <span className="text-tertiary">Account status:</span>
+                        {authenticatedUser ? (
+                          <span className="text-emerald-400 font-medium">✓ Logged in as {authenticatedUser}</span>
+                        ) : (
+                          <Link
+                            href="/?modal=signup&redirectTo=/onboarding"
+                            className="text-white underline hover:text-emerald-400 font-medium"
+                          >
+                            Sign up / Log in to link desk →
+                          </Link>
+                        )}
+                      </div>
                     </div>
 
                     {error ? (
@@ -437,7 +477,7 @@ export function OnboardingFlow({
                             Creating order…
                           </>
                         ) : (
-                          `Create order • ${PRICE_LABEL}`
+                          `Proceed to payment • ${PRICE_LABEL}`
                         )}
                       </button>
                     </div>
@@ -488,7 +528,13 @@ function OrderReceipt({
         </div>
 
         <div className="border-t border-white/[0.06] p-5 space-y-3">
-          <PayCta className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-[14px] font-medium text-[#08090a] transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.97]">
+          <PayCta
+            orderId={order.orderId}
+            company={order.company}
+            url={order.url}
+            email={order.email}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-[14px] font-medium text-[#08090a] transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.97]"
+          >
             Pay {PRICE_LABEL} founding
           </PayCta>
           <Link

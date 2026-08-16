@@ -1,0 +1,25 @@
+{
+  "studyId": "k3n1qdhhgaj4n0kvxlimoual",
+  "writtenAt": "2026-08-16T00:31:58.921Z",
+  "aggregate": {
+    "aVotes": 4,
+    "bVotes": 2,
+    "total": 6,
+    "winner": "A",
+    "metric": "preference"
+  },
+  "sampleExcerpts": [
+    {
+      "choice": "B",
+      "excerpt": "As an AI Research Project Lead, finding the perfect expert for your complex projects can be a daunting task. Upwork's broad offerings might not always yield the best fit, and Fiverr's small-project focus can limit your options. Terac connec"
+    },
+    {
+      "choice": "A",
+      "excerpt": "Hi, as an expert in AI research, you likely struggle to stand out on broad platforms like Upwork. Terac offers a specialized network, increasing your visibility to high-end clients and projects. Let's discuss how to elevate your career with"
+    },
+    {
+      "choice": "A",
+      "excerpt": "Hi, as an expert in AI research, you likely struggle to stand out on broad platforms like Upwork. Terac offers a specialized network, increasing your visibility to high-end clients and projects. Let's discuss how to elevate your career with"
+    }
+  ]
+}

@@ -6,6 +6,8 @@ import { hydrateDeskFromOrders } from "@/lib/hydrate-desk";
 import { emptyAgentBrief, type AgentBrief } from "@/lib/types";
 import { createClient } from "@/utils/supabase/server";
 
+import { isUserPaid } from "@/lib/subscription";
+
 export default async function OnboardingPage({
   searchParams,
 }: {
@@ -17,7 +19,9 @@ export default async function OnboardingPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (user && !businessId && startNew !== "1") {
+  const paid = user ? await isUserPaid(user.id, user) : false;
+
+  if (user && paid && !businessId && startNew !== "1") {
     await hydrateDeskFromOrders(user.id, user.email ?? null);
     const businesses = await listBusinessesForOwner(user.id, user.email ?? null);
     if (businesses.length > 0) {

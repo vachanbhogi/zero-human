@@ -50,6 +50,16 @@ export function SprintReportView({ report }: { report: SprintReportData }) {
       </header>
 
       <main className="relative mx-auto max-w-200 px-5 py-12 md:px-8">
+        {typeof window !== "undefined" && window.location.search.includes("paid=true") ? (
+          <div className="mb-6 flex items-center justify-between rounded-xl border border-emerald-500/30 bg-emerald-950/20 px-4 py-2.5 text-[13px] text-emerald-300">
+            <span className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              Payment Confirmed ($20/mo Founding Desk)
+            </span>
+            <span className="font-mono text-[11px] text-emerald-400/80">Stripe Live</span>
+          </div>
+        ) : null}
+
         <p className="text-[13px] text-secondary">
           {report.companyName} · {report.url}
         </p>
