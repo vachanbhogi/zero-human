@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { ReportRenderValidationError, renderReport } from "./render.ts";
-import type { SprintResult } from "../pipeline-types.ts";
+import type { SprintResult } from "../pipeline-types";
 
 const source = {
   url: "https://example.com",
