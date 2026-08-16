@@ -43,11 +43,14 @@ export function PayCta({
       console.warn("[PayCta Checkout Exception]:", err);
     }
 
-    // Fallback to direct Stripe link if API fails
-    const fallbackLink =
-      process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK ||
-      "https://buy.stripe.com/test_8x214g1Sr4S7bSc8VBcjS00";
-    window.location.href = fallbackLink;
+    // Fallback to the live hosted Stripe link if the API fails; never a test link.
+    const fallbackLink = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK;
+    if (fallbackLink) {
+      window.location.href = fallbackLink;
+      return;
+    }
+    setLoading(false);
+    alert("Checkout is temporarily unavailable. Please try again.");
   }
 
   return (

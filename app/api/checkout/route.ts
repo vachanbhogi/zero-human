@@ -85,11 +85,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, url: paymentLink });
     }
 
-    // Emergency demo fallback
-    return NextResponse.json({
-      success: true,
-      url: orderId ? `/sprint/${orderId}?paid=true` : "/onboarding",
-    });
+    // No payment rail available: fail closed rather than handing out the
+    // deliverable for free.
+    return NextResponse.json({ error: "Payments are not configured" }, { status: 503 });
   } catch (err) {
     console.error("[Checkout Route Error]:", err);
     return NextResponse.json(

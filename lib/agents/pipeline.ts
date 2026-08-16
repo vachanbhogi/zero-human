@@ -58,9 +58,25 @@ function collectSources(scoutSource: SourceRef, competitors: CompetitorEntry[]):
 }
 
 function selectVariant(): "A" | "B" {
-  // The Terac benchmark study picks the eventual default; until that result
-  // is wired in, this env var lets ops flip the default without a deploy.
+  // Default set by the completed Terac preference study (see
+  // evidence/terac/DECISION.md); the env var lets ops flip it without a deploy.
   return process.env.PIPELINE_VARIANT === "B" ? "B" : "A";
+}
+
+/**
+ * The completed Terac study attached to generated reports, sourced from env
+ * so the values track evidence/terac/<studyId>.json without a code change.
+ * Returns not_run unless all four values are present and coherent.
+ */
+function teracResult(): SprintResult["terac"] {
+  const studyId = process.env.TERAC_STUDY_ID?.trim();
+  const metric = process.env.TERAC_STUDY_METRIC?.trim();
+  const aScore = Number(process.env.TERAC_STUDY_A_SCORE);
+  const bScore = Number(process.env.TERAC_STUDY_B_SCORE);
+  if (!studyId || !metric || !Number.isFinite(aScore) || !Number.isFinite(bScore)) {
+    return { status: "not_run" };
+  }
+  return { status: "completed", studyId, metric, aScore, bScore };
 }
 
 export interface RunSprintResult {
@@ -105,9 +121,7 @@ export async function runSprint(orderId: string, deps: PipelineDeps): Promise<Ru
     outreach: chosenVariant.outreach,
     nextMove: chosenVariant.nextMove,
     variantUsed,
-    // No completed Terac study is wired into the pipeline yet; the Terac
-    // winner will populate a { status: "completed", ... } result later.
-    terac: { status: "not_run" },
+    terac: teracResult(),
     sources: collectSources(scoutSource, analysis.competitors),
   };
 

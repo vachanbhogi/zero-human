@@ -27,10 +27,10 @@ export async function GET(req: NextRequest) {
     }
 
     const session = await res.json();
-    const isPaid =
-      session.payment_status === "paid" ||
-      session.status === "complete" ||
-      session.mode === "subscription";
+    // payment_status is the only server-authoritative signal; an unpaid
+    // subscription session also has mode === "subscription", so mode alone
+    // must never count as proof of payment.
+    const isPaid = session.payment_status === "paid";
 
     if (!isPaid) {
       return NextResponse.json({ success: false, paid: false }, { status: 400 });

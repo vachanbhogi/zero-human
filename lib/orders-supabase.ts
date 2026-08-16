@@ -12,7 +12,7 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import type { OrderResponse } from "@/lib/types";
 import type { DispatchClaim, OrdersServer, SprintResult } from "@/lib/pipeline-types";
-import { hashToken, mintToken } from "@/lib/orders-tokens";
+import { createReportToken, hashReportToken } from "@/lib/report/token";
 
 /** Result of the mark_order_paid RPC (supabase/schema-v2.sql section 4). */
 export type MarkOrderPaidResult = "ok" | "duplicate" | "invalid_state";
@@ -26,6 +26,7 @@ export interface ReportRecord {
   company?: string;
   audience?: string;
   resultJson: SprintResult | null;
+  reportTokenHash: string;
 }
 
 interface OrdersRow {
@@ -142,8 +143,10 @@ export class SupabaseOrdersServer implements OrdersServer {
     orderId: string,
     sprintResult: SprintResult
   ): Promise<{ reportToken: string }> {
-    const reportToken = mintToken();
-    const reportTokenHash = hashToken(reportToken);
+    // Domain-separated hash (lib/report/token.ts) — the same scheme
+    // lib/report/lookup.ts hashes with on the way back in.
+    const reportToken = createReportToken();
+    const reportTokenHash = hashReportToken(reportToken);
 
     const { data, error } = await this.client
       .from("orders")
@@ -231,6 +234,30 @@ export class SupabaseOrdersServer implements OrdersServer {
   }
 
   /**
+   * Re-issues a delivery token for an order whose result already exists
+   * (customer lost the link / re-triggered generation). Overwrites the old
+   * hash, so exactly one link is live at a time. Returns null when the order
+   * has no stored result.
+   */
+  async reissueReportToken(orderId: string): Promise<{ reportToken: string } | null> {
+    const reportToken = createReportToken();
+    const { data, error } = await this.client
+      .from("orders")
+      .update({
+        report_token_hash: hashReportToken(reportToken),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", orderId)
+      .not("result_json", "is", null)
+      .select("id");
+
+    if (error) {
+      throw new Error(`reissueReportToken(${orderId}): ${error.message}`);
+    }
+    return data && data.length > 0 ? { reportToken } : null;
+  }
+
+  /**
    * Looks up an order by the SHA-256 hash of its report_token, for the
    * report page (CONTRACT.md v2 sections 6-7). Returns null on no match —
    * callers must render the same generic 404 for "no match" and "wrong
@@ -239,7 +266,7 @@ export class SupabaseOrdersServer implements OrdersServer {
   async getOrderByReportTokenHash(hash: string): Promise<ReportRecord | null> {
     const { data, error } = await this.client
       .from("orders")
-      .select("id, status, url, niche, company, audience, result_json")
+      .select("id, status, url, niche, company, audience, result_json, report_token_hash")
       .eq("report_token_hash", hash)
       .maybeSingle();
 
@@ -256,6 +283,7 @@ export class SupabaseOrdersServer implements OrdersServer {
       company: data.company ?? undefined,
       audience: data.audience ?? undefined,
       resultJson: (data.result_json as SprintResult | null) ?? null,
+      reportTokenHash: String(data.report_token_hash ?? ""),
     };
   }
 }
