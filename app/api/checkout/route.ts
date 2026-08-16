@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { createClient } from "@/utils/supabase/server";
 import { configuredSiteOrigin } from "@/utils/site-origin";
 
 export async function POST(req: NextRequest) {
@@ -32,8 +34,20 @@ export async function POST(req: NextRequest) {
       );
       params.append("line_items[0][quantity]", "1");
 
+      const cookieStore = await cookies();
+      const supabase = createClient(cookieStore);
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user?.id) {
+        params.append("metadata[user_id]", user.id);
+      }
+
       if (email && typeof email === "string" && email.includes("@")) {
         params.append("customer_email", email.trim());
+      } else if (user?.email) {
+        params.append("customer_email", user.email);
       }
 
       if (orderId) {

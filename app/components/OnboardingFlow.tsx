@@ -408,9 +408,22 @@ export function OnboardingFlow({
                         </span>
                       </div>
                       <p className="mt-2 text-[11px] leading-4 text-tertiary">
-                        Stripe Payment Link next. Agents stay idle until payment is real.
-                        Terac preference numbers only after a live study — drafts stay labeled.
+                        Stripe checkout next. Desk stays locked until payment is verified in Supabase.
                       </p>
+                      
+                      <div className="mt-3 pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs">
+                        <span className="text-tertiary">Account status:</span>
+                        {authenticatedUser ? (
+                          <span className="text-emerald-400 font-medium">✓ Logged in as {authenticatedUser}</span>
+                        ) : (
+                          <Link
+                            href="/?modal=signup&redirectTo=/onboarding"
+                            className="text-white underline hover:text-emerald-400 font-medium"
+                          >
+                            Sign up / Log in to link desk →
+                          </Link>
+                        )}
+                      </div>
                     </div>
 
                     {error ? (
@@ -437,7 +450,7 @@ export function OnboardingFlow({
                             Creating order…
                           </>
                         ) : (
-                          `Create order • ${PRICE_LABEL}`
+                          `Proceed to payment • ${PRICE_LABEL}`
                         )}
                       </button>
                     </div>
