@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { listOrdersForOwner } from "@/lib/orders";
 import { hydrateDeskFromOrders } from "@/lib/hydrate-desk";
+import { isUserPaid } from "@/lib/subscription";
 import {
   getSelectedBusinessId,
   listBusinessesForOwner,
@@ -32,6 +33,12 @@ export default async function DashboardPage({
 
   if (!user) {
     redirect("/?modal=login&redirectTo=/dashboard");
+  }
+
+  // Enforce Paid Membership
+  const paid = await isUserPaid(user.id, user);
+  if (!paid) {
+    redirect("/onboarding?step=launch&notice=membership_required");
   }
 
   const email = user.email ?? null;
