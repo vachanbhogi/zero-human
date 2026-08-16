@@ -311,6 +311,7 @@ export async function launchStudy(id: string): Promise<TeracOpportunity> {
   }
   return teracFetch(`/opportunities/${encodeURIComponent(id)}/launch`, {
     method: "POST",
+    body: "{}",
   });
 }
 
