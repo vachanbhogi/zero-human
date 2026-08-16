@@ -488,7 +488,13 @@ function OrderReceipt({
         </div>
 
         <div className="border-t border-white/[0.06] p-5 space-y-3">
-          <PayCta className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-[14px] font-medium text-[#08090a] transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.97]">
+          <PayCta
+            orderId={order.orderId}
+            company={order.company}
+            url={order.url}
+            email={order.email}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-[14px] font-medium text-[#08090a] transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.97]"
+          >
             Pay {PRICE_LABEL} founding
           </PayCta>
           <Link
